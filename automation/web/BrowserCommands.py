@@ -5,7 +5,7 @@ class BrowserCommands:
 
     def __init__(self, driver: webdriver):
         print("Creating instance of BrowserCommands.")
-        self.driver: webdriver = driver
+        self.driver = driver
 
     def __execute(self, task: str, input_value: str):
         print("Performing " + task + " Browser Action.")
