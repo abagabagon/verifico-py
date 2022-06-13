@@ -1,14 +1,22 @@
 from selenium import webdriver
-
-
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.chrome.service import Service
 import platform
+import os
+
+
+from webdriver_manager.core.utils import ChromeType
+from webdriver_manager.firefox import GeckoDriverManager
+from webdriver_manager.microsoft import IEDriverManager, EdgeChromiumDriverManager
+from webdriver_manager.opera import OperaDriverManager
 
 
 class WebDriverFactory:
 
     def __init__(self):
-        print("Creating instance of WebDriverFactory")
+        print("Creating instance of WebDriverFactory.")
         self.driver = None
+        os.environ['GH_TOKEN'] = "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"
 
     def __get_driver(self, driver_name: str):
         self.driver = None
@@ -16,9 +24,13 @@ class WebDriverFactory:
         try:
             match driver_name:
                 case "CHROME":
-                    self.driver = webdriver.Chrome()
+                    self.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
+                case "CHROMIUM":
+                    self.driver = webdriver.Chrome(service=Service(ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install()))
+                case "BRAVE":
+                    self.driver = webdriver.Chrome(service=Service(ChromeDriverManager(chrome_type=ChromeType.BRAVE).install()))
                 case "FIREFOX":
-                    self. driver = webdriver.Firefox()
+                    self. driver = webdriver.Firefox(service=Service(GeckoDriverManager().install()))
                 case "SAFARI":
                     if operating_system == 'Darwin':
                         self.driver = webdriver.Safari()
@@ -26,13 +38,12 @@ class WebDriverFactory:
                         print(operating_system + " is an unsupported Operating System to run Safari Web Driver")
                         exit(1)
                 case "EDGE":
-                    self.driver = webdriver.Edge()
+                    self.driver = webdriver.Edge(service=Service(EdgeChromiumDriverManager().install()))
                 case "IE":
                     if operating_system == 'Windows':
-                        self.driver = webdriver.Ie()
+                        self.driver = webdriver.Ie(service=Service(IEDriverManager().install()))
                     else:
-                        print(operating_system + " is an unsupported Operating System to run Internet Explorer Web " +
-                                                 "Driver")
+                        print(operating_system + " is an unsupported Operating System to run Internet Explorer Web Driver")
                         exit(1)
                 case default:
                     print("Unsupported Web Driver.")
@@ -45,6 +56,16 @@ class WebDriverFactory:
         print("Initializing Google Chrome Web Driver")
         chrome_driver = self.__get_driver("CHROME")
         return chrome_driver
+
+    def get_chromium_driver(self):
+        print("Initializing Chromium Web Driver")
+        chromium_driver = self.__get_driver("CHROMIUM")
+        return chromium_driver
+
+    def get_brave_driver(self):
+        print("Initializing Brave Web Driver")
+        brave_driver = self.__get_driver("BRAVE")
+        return brave_driver
 
     def get_firefox_driver(self):
         print("Initializing Mozilla Firefox Web Driver")
