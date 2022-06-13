@@ -10,7 +10,7 @@ from time import sleep
 class MouseCommands:
 
     def __init__(self, driver, wait: WaitCommands):
-        print("Creating instance of BrowserCommands.")
+        print("Creating instance of MouseCommands.")
         self.driver = driver
         self.wait = wait
         self.action_chains = ActionChains(self.driver)
@@ -46,7 +46,7 @@ class MouseCommands:
         return action_performed
 
     def __do_command(self, task: str, locator: By, value: str):
-        print("Performing " + task + " to the Web Element " + value + ".");
+        print("Performing " + task + " to the Web Element " + value + ".")
         for x in range(3):
             element = self.element_factory.create_element(locator, value)
             action_performed = self.__execute(task, element)
@@ -56,7 +56,7 @@ class MouseCommands:
                     print("Retrying Mouse Action " + task + " for Web Element " + value + " " + retry_count + "/3.")
                     sleep(1)
                 else:
-                    print("Failed to perform Mouse Action " + task + " for Web Element " + value + ".");
+                    print("Failed to perform Mouse Action " + task + " for Web Element " + value + ".")
             else:
                 break
 
@@ -86,7 +86,7 @@ class MouseCommands:
                     print("Retrying Mouse Action " + task + " for Web Element " + str(element) + " " + retry_count + "/3.")
                     sleep(1)
                 else:
-                    print("Failed to perform Mouse Action " + task + " for Web Element " + str(element) + ".");
+                    print("Failed to perform Mouse Action " + task + " for Web Element " + str(element) + ".")
             else:
                 break
 
@@ -116,7 +116,7 @@ class MouseCommands:
                     print("Retrying Mouse Action " + task + " for Web Element " + str(element) + " " + retry_count + "/3.")
                     sleep(1)
                 else:
-                    print("Failed to perform Mouse Action " + task + " for Web Element " + str(element) + ".");
+                    print("Failed to perform Mouse Action " + task + " for Web Element " + str(element) + ".")
             else:
                 break
 
