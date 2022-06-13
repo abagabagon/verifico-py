@@ -98,19 +98,15 @@ class WaitCommands:
     def __execute(self, task: str, parent_locator: By, parent_value: str, child_locator: By, child_value: str):
         print("Waiting for " + task + ".")
         try:
-            parent_element = self.wait.until(expected_conditions.presence_of_element_located(parent_locator,
-                                                                                             parent_value))
+            parent_element = self.wait.until(expected_conditions.presence_of_element_located(parent_locator, parent_value))
             local_wait = WebDriverWait(parent_element, self.explicit_wait_duration)
             match str:
                 case "ELEMENT_TO_BE_PRESENT":
-                    child_element = local_wait.until(expected_conditions.presence_of_element_located(child_locator,
-                                                                                                     child_value))
+                    child_element = local_wait.until(expected_conditions.presence_of_element_located(child_locator, child_value))
                 case "ELEMENT_TO_BE_VISIBLE":
-                    child_element = local_wait.until(expected_conditions.visibility_of_element_located(child_locator,
-                                                                                                       child_value))
+                    child_element = local_wait.until(expected_conditions.visibility_of_element_located(child_locator, child_value))
                 case "ELEMENT_TO_BE_CLICKABLE":
-                    child_element = local_wait.until(expected_conditions.element_to_be_clickable(child_locator,
-                                                                                                 child_value))
+                    child_element = local_wait.until(expected_conditions.element_to_be_clickable(child_locator, child_value))
                 case default:
                     print(task + " is an unsupported Wait Command.")
         except TimeoutException as error_message:

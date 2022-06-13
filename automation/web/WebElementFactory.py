@@ -16,8 +16,7 @@ class WebElementFactory:
         return element
 
     def create_element(self, parent_locator: By, parent_value: str, child_locator: By, child_value: str):
-        child_element = self.wait.wait_for_element_to_be_present(parent_locator, parent_value, child_locator,
-                                                                 child_value)
+        child_element = self.wait.wait_for_element_to_be_present(parent_locator, parent_value, child_locator, child_value)
         return child_element
 
     def create_element(self, parent_element: WebElement, child_locator: By, child_value: str):
