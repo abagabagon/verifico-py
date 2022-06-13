@@ -1,4 +1,6 @@
 from selenium import webdriver
+from selenium.common import NoSuchWindowException
+from selenium.webdriver.common.by import By
 
 
 class BrowserCommands:
@@ -7,10 +9,10 @@ class BrowserCommands:
         print("Creating instance of BrowserCommands.")
         self.driver = driver
 
-    def __execute(self, task: str, input_value: str):
+    def __execute_browser_action(self, task: str, input_value: str):
         print("Performing " + task + " Browser Action.")
         try:
-            match str:
+            match task:
                 case "OPEN_TAB":
                     self.driver.execute_script("window.open('" + input_value + "', '_blank');")
                 case "MAXIMIZE":
@@ -30,34 +32,79 @@ class BrowserCommands:
                 case "CLOSE_BROWSER":
                     self.driver.quit()
                 case default:
-                    print("Unsupported Browser Action: " + task)
+                    print(task + " is an unsupported Browser Action.")
         except Exception as error_message:
             print("Encountered Exception when trying to perform task " + task + " Web Driver: " + str(error_message))
-            exit(1)
 
     def open_tab(self, url: str):
-        self.__execute("OPEN_TAB", url)
+        self.__execute_browser_action("OPEN_TAB", url)
 
     def maximize(self):
-        self.__execute("MAXIMIZE", None)
+        self.__execute_browser_action("MAXIMIZE", None)
 
     def delete_all_cookies(self):
-        self.__execute("DELETE_ALL_COOKIES", None)
+        self.__execute_browser_action("DELETE_ALL_COOKIES", None)
 
     def go_to(self, url: str):
-        self.__execute("GO_TO", url)
+        self.__execute_browser_action("GO_TO", url)
 
     def back(self):
-        self.__execute("BACK", None)
+        self.__execute_browser_action("BACK", None)
 
     def forward(self):
-        self.__execute("FORWARD", None)
+        self.__execute_browser_action("FORWARD", None)
 
     def refresh(self):
-        self.__execute("REFRESH", None)
+        self.__execute_browser_action("REFRESH", None)
 
     def close_tab(self):
-        self.__execute("CLOSE_TAB", None)
+        self.__execute_browser_action("CLOSE_TAB", None)
 
     def close_browser(self):
-        self.__execute("CLOSE_BROWSER", None)
+        self.__execute_browser_action("CLOSE_BROWSER", None)
+
+    def __execute_switch_action(self, task: str, input_value: str):
+        print("Switching tab " + task)
+        for handle in self.driver.window_handles:
+            try:
+                self.driver.switch_to_window(handle)
+                if task.__eq__("TO_DEFAULT"):
+                    break
+                match task:
+                    case "BY_TITLE":
+                        page_title: str = self.driver.title
+                        if page_title.__eq__(input_value):
+                            print("Successfully switched to Window with Title: " + input_value)
+                            break
+                    case "BY_URL":
+                        page_url: str = self.driver.current_url
+                        if page_url.__eq__(input_value):
+                            print("Successfully switched to Window with URL: " + input_value)
+                            break
+                    case default:
+                        print(task + " is an unsupported Switch Action.")
+            except NoSuchWindowException as error_message:
+                print("Encountered NoSuchWindowException when trying to perform Switch " + task + " Action: " + str(error_message))
+            except Exception as error_message:
+                print("Encountered Exception when trying to perform Switch " + task + " Action: " + str(error_message))
+
+    def switch_tab_by_title(self, title: str):
+        self.__execute_switch_action("BY_TITLE", title)
+
+    def switch_tab_by_url(self, url: str):
+        self.__execute_switch_action("BY_TITLE", url)
+
+    def switch_tab_to_original(self):
+        self.__execute_switch_action("TO_DEFAULT", None)
+
+    def scroll(self, pixel_horizontal: int, pixel_vertical: int):
+        print("Performing SCROLL Browser Action to coordinates " + pixel_horizontal + ", " + pixel_vertical)
+        try:
+            self.driver.execute_script("window.scrollBy(" + pixel_horizontal + ", " + pixel_vertical + ")")
+        except Exception as error_message:
+            print("Encountered Exception when trying to perform SCROLL Browser Action: " + str(error_message))
+
+    def count(self, locator: By, value: str):
+        elements = self.driver.find_elements(locator, value);
+        count = len(elements)
+        return count
