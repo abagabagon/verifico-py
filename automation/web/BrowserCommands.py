@@ -105,6 +105,7 @@ class BrowserCommands:
             print("Encountered Exception when trying to perform SCROLL Browser Action: " + str(error_message))
 
     def count(self, locator: By, value: str):
+        print("Performing Element Count.")
         elements = self.driver.find_elements(locator, value);
         count = len(elements)
         return count
