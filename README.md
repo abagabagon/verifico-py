@@ -27,7 +27,7 @@ Supported WebDrivers are as follows
 * Microsoft Edge
 * Internet Explorer
 
-Wait Commands are also available at the `WaitCommands` Class by which functions are utilized by other Automation Command Classes. User will only need to initialize Implicit and Explict Waits. The instance of the `WaitCommands` Class will be utilized by Automation Command Classes which are discussed on below other sections.
+Wait Commands are also available at the `WaitCommands` Class by which functions are utilized by other Automation Command Classes. User will only need to initialize Implicit and Explicit Waits. The instance of the `WaitCommands` Class will be utilized by Automation Command Classes which are discussed on below other sections.
 
 ```python
 self.implicit_wait_duration = 10
