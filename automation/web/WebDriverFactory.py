@@ -43,7 +43,7 @@ class WebDriverFactory:
                     else:
                         print(operating_system + " is an unsupported Operating System to run Internet Explorer Web Driver")
                         exit(1)
-                case default:
+                case _:
                     print("Unsupported Web Driver.")
         except Exception as error_message:
             print("Encountered Exception when trying to get " + driver_name + " Web Driver: " + str(error_message))

@@ -31,7 +31,7 @@ class BrowserCommands:
                     self.driver.close()
                 case "CLOSE_BROWSER":
                     self.driver.quit()
-                case default:
+                case _:
                     print(task + " is an unsupported Browser Action.")
         except Exception as error_message:
             print("Encountered Exception when trying to perform task " + task + " Web Driver: " + str(error_message))

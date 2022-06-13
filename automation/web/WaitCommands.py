@@ -37,7 +37,7 @@ class WaitCommands:
                     status = self.wait.until(expected_conditions.title_is(check_value))
                 case "TITLE_TO_CONTAIN":
                     status = self.wait.until(expected_conditions.title_contains(check_value))
-                case default:
+                case _:
                     print(task + " is an unsupported Wait Command.")
         except TimeoutException as error_message:
             print("Encountered TimeoutException when trying to wait for " + task + ": " + str(error_message))
@@ -75,7 +75,7 @@ class WaitCommands:
                     element = self.wait.until(expected_conditions.visibility_of_element_located(locator, value))
                 case "ELEMENT_TO_BE_CLICKABLE":
                     element = self.wait.until(expected_conditions.element_to_be_clickable(locator, value))
-                case default:
+                case _:
                     print(task + " is an unsupported Wait Command.")
         except TimeoutException as error_message:
             print("Encountered TimeoutException when trying to wait for " + task + ": " + str(error_message))
@@ -107,7 +107,7 @@ class WaitCommands:
                     child_element = local_wait.until(expected_conditions.visibility_of_element_located(child_locator, child_value))
                 case "ELEMENT_TO_BE_CLICKABLE":
                     child_element = local_wait.until(expected_conditions.element_to_be_clickable(child_locator, child_value))
-                case default:
+                case _:
                     print(task + " is an unsupported Wait Command.")
         except TimeoutException as error_message:
             print("Encountered TimeoutException when trying to wait for " + task + ": " + str(error_message))
@@ -115,18 +115,15 @@ class WaitCommands:
             print("Encountered Exception when trying to wait for " + task + ": " + str(error_message))
         return child_element
 
-    def wait_for_element_to_be_present(self, parent_locator: By, parent_value: str, child_locator: By,
-                                       child_value: str):
+    def wait_for_element_to_be_present(self, parent_locator: By, parent_value: str, child_locator: By, child_value: str):
         element = self.__execute("ELEMENT_TO_BE_PRESENT", parent_locator, parent_value, child_locator, child_value)
         return element
 
-    def wait_for_element_to_be_visible(self, parent_locator: By, parent_value: str, child_locator: By,
-                                       child_value: str):
+    def wait_for_element_to_be_visible(self, parent_locator: By, parent_value: str, child_locator: By, child_value: str):
         element = self.__execute("ELEMENT_TO_BE_VISIBLE", parent_locator, parent_value, child_locator, child_value)
         return element
 
-    def wait_for_element_to_be_clickable(self, parent_locator: By, parent_value: str, child_locator: By,
-                                         child_value: str):
+    def wait_for_element_to_be_clickable(self, parent_locator: By, parent_value: str, child_locator: By, child_value: str):
         element = self.__execute("ELEMENT_TO_BE_CLICKABLE", parent_locator, parent_value, child_locator, child_value)
         return element
 
@@ -141,7 +138,7 @@ class WaitCommands:
                     child_element = local_wait.until(expected_conditions.visibility_of_element_located(child_locator))
                 case "ELEMENT_TO_BE_CLICKABLE":
                     child_element = local_wait.until(expected_conditions.element_to_be_clickable(child_locator))
-                case default:
+                case _:
                     print(task + " is an unsupported Wait Command.")
         except TimeoutException as error_message:
             print("Encountered TimeoutException when trying to wait for " + task + ": " + str(error_message))
