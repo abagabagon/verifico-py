@@ -62,7 +62,6 @@ self.browser.refresh()
 | `refresh`                 | Refreshes current page                                      |
 | `maximize`                | Maximizes Browser Window                                    |
 | `delete_all_cookies`      | Deletes all cookies                                         |
-| `delete_cookie`           | Deletes cookie with the specified name                      |
 | `scroll`                  | Scrolls Page                                                |
 | `close_tab`               | Closes Tab of a Web Browser                                 |
 | `close_browser`           | Closes Web Browser                                          |
