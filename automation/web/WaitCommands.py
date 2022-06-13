@@ -157,3 +157,12 @@ class WaitCommands:
     def wait_for_element_to_be_clickable(self, parent_element: WebElement, child_locator: By):
         element = self.__execute("ELEMENT_TO_BE_CLICKABLE", parent_element, child_locator)
         return element
+
+    def wait_for_alert_to_be_present(self):
+        try:
+            alert = self.wait.until(expected_conditions.alert_is_present())
+        except TimeoutException as error_message:
+            print("Encountered TimeoutException when trying to wait for Javascript Alert: " + str(error_message))
+        except Exception as error_message:
+            print("Encountered Exception when trying to wait for Javascript Alert: " + str(error_message))
+        return alert
