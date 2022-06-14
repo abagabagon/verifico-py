@@ -1,3 +1,4 @@
+import logging
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 
@@ -7,9 +8,10 @@ from automation.web.WaitCommands import WaitCommands
 class WebElementFactory:
 
     def __init__(self, driver, wait: WaitCommands):
+        self.log = logging.getLogger(__name__)
+        self.log.debug("Creating instance of WebElementFactory.")
         self.driver = driver
         self.wait = wait
-        print("Creating instance of WebElementFactory.")
 
     def create_element(self, locator: By, value: str):
         element = self.wait.wait_for_element_to_be_present(locator, value)
