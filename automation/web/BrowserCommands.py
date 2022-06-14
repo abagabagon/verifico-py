@@ -87,7 +87,7 @@ class BrowserCommands:
                             self.log.debug("Successfully switched to Window with URL: " + input_value)
                             break
                     case _:
-                        self.log.error(task + " is an unsupported Switch Action.")
+                        self.log.error(task.replace("_", " ") + " is an unsupported Switch Action.")
             except NoSuchWindowException as error_message:
                 self.log.warning("Encountered NoSuchWindowException when trying to perform Switch " + task.replace("_", " ") + " Action: " + str(error_message))
             except Exception as error_message:
