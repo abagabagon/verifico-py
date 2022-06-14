@@ -33,7 +33,7 @@ class GetCommands:
                 case "GET_TEXT":
                     self.retrieved_value = element.text
                 case _:
-                    print(task + " is an unsupported Get Action.")
+                    self.log.error(task + " is an unsupported Get Action.")
             action_performed = True
         except StaleElementReferenceException as error_message:
             self.log.warning("Encountered StaleElementReferenceException when trying to perform task " + task + " Web Driver: " + str(error_message))
@@ -44,7 +44,7 @@ class GetCommands:
         return action_performed
 
     def __do_command(self, task: str, locator: By, value: str, attribute: str):
-        print("Performing " + task + " to the Web Element " + value + ".")
+        self.log.debug("Performing " + task + " to the Web Element " + value + ".")
         for x in range(3):
             element = self.element_factory.create_element(locator, value)
             action_performed = self.__execute(task, element, attribute)
