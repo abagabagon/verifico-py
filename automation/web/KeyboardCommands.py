@@ -11,7 +11,7 @@ import platform
 class KeyboardCommands:
 
     def __init__(self, driver, wait: WaitCommands):
-        print("Creating instance of BrowserCommands.")
+        print("Creating instance of KeyboardCommands.")
         self.driver = driver
         self.wait = wait
         self.action_chains = ActionChains(self.driver)
