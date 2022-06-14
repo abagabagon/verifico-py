@@ -1,16 +1,18 @@
 from selenium import webdriver
 from selenium.common import NoSuchWindowException
 from selenium.webdriver.common.by import By
+import logging
 
 
 class BrowserCommands:
 
     def __init__(self, driver: webdriver):
-        print("Creating instance of BrowserCommands.")
+        self.log = logging.getLogger(__name__)
+        self.log.debug("Creating instance of BrowserCommands.")
         self.driver = driver
 
     def __execute_browser_action(self, task: str, input_value: str):
-        print("Performing " + task + " Browser Action.")
+        self.log.debug("Performing " + task + " Browser Action.")
         try:
             match task:
                 case "OPEN_TAB":
@@ -32,9 +34,9 @@ class BrowserCommands:
                 case "CLOSE_BROWSER":
                     self.driver.quit()
                 case _:
-                    print(task + " is an unsupported Browser Action.")
+                    self.log.error(task + " is an unsupported Browser Action.")
         except Exception as error_message:
-            print("Encountered Exception when trying to perform task " + task + " Web Driver: " + str(error_message))
+            self.log.warning("Encountered Exception when trying to perform task " + task + " Web Driver: " + str(error_message))
 
     def open_tab(self, url: str):
         self.__execute_browser_action("OPEN_TAB", url)
@@ -64,7 +66,7 @@ class BrowserCommands:
         self.__execute_browser_action("CLOSE_BROWSER", None)
 
     def __execute_switch_action(self, task: str, input_value: str):
-        print("Switching tab " + task)
+        self.log.debug("Switching tab " + task)
         for handle in self.driver.window_handles:
             try:
                 self.driver.switch_to_window(handle)
@@ -74,19 +76,19 @@ class BrowserCommands:
                     case "BY_TITLE":
                         page_title: str = self.driver.title
                         if page_title.__eq__(input_value):
-                            print("Successfully switched to Window with Title: " + input_value)
+                            self.log.debug("Successfully switched to Window with Title: " + input_value)
                             break
                     case "BY_URL":
                         page_url: str = self.driver.current_url
                         if page_url.__eq__(input_value):
-                            print("Successfully switched to Window with URL: " + input_value)
+                            self.log.debug("Successfully switched to Window with URL: " + input_value)
                             break
-                    case default:
-                        print(task + " is an unsupported Switch Action.")
+                    case _:
+                        self.log.error(task + " is an unsupported Switch Action.")
             except NoSuchWindowException as error_message:
-                print("Encountered NoSuchWindowException when trying to perform Switch " + task + " Action: " + str(error_message))
+                self.log.warning("Encountered NoSuchWindowException when trying to perform Switch " + task + " Action: " + str(error_message))
             except Exception as error_message:
-                print("Encountered Exception when trying to perform Switch " + task + " Action: " + str(error_message))
+                self.log.warning("Encountered Exception when trying to perform Switch " + task + " Action: " + str(error_message))
 
     def switch_tab_by_title(self, title: str):
         self.__execute_switch_action("BY_TITLE", title)
@@ -98,14 +100,14 @@ class BrowserCommands:
         self.__execute_switch_action("TO_DEFAULT", None)
 
     def scroll(self, pixel_horizontal: int, pixel_vertical: int):
-        print("Performing SCROLL Browser Action to coordinates " + pixel_horizontal + ", " + pixel_vertical)
+        self.log.debug("Performing SCROLL Browser Action to coordinates " + pixel_horizontal + ", " + pixel_vertical)
         try:
             self.driver.execute_script("window.scrollBy(" + pixel_horizontal + ", " + pixel_vertical + ")")
         except Exception as error_message:
-            print("Encountered Exception when trying to perform SCROLL Browser Action: " + str(error_message))
+            self.log.warning("Encountered Exception when trying to perform SCROLL Browser Action: " + str(error_message))
 
     def count(self, locator: By, value: str):
-        print("Performing Element Count.")
+        self.log.debug("Performing Element Count.")
         elements = self.driver.find_elements(locator, value);
         count = len(elements)
         return count

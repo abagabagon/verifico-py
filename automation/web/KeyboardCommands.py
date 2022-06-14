@@ -1,3 +1,5 @@
+import logging
+
 from selenium.common import StaleElementReferenceException, ElementNotInteractableException, InvalidElementStateException
 from selenium.webdriver import ActionChains, Keys
 from selenium.webdriver.common.by import By
@@ -6,12 +8,14 @@ from automation.web.WaitCommands import WaitCommands
 from automation.web.WebElementFactory import WebElementFactory
 from time import sleep
 import platform
+import logging
 
 
 class KeyboardCommands:
 
     def __init__(self, driver, wait: WaitCommands):
-        print("Creating instance of KeyboardCommands.")
+        self.log = logging.getLogger(__name__)
+        self.log.debug("Creating instance of KeyboardCommands.")
         self.driver = driver
         self.wait = wait
         self.action_chains = ActionChains(self.driver)
@@ -36,32 +40,32 @@ class KeyboardCommands:
                 case "TYPE":
                     element.send_keys(input_text)
                 case _:
-                    print(task + " is an unsupported Keyboard Action.")
+                    self.log.error(task + " is an unsupported Keyboard Action.")
             action_performed = True
         except StaleElementReferenceException as error_message:
-            print("Encountered StaleElementReferenceException when trying to perform task " + task + " Web Driver: " + str(error_message))
+            self.log.warning("Encountered StaleElementReferenceException when trying to perform task " + task + " Web Driver: " + str(error_message))
         except ElementNotInteractableException as error_message:
-            print("Encountered ElementNotInteractableException when trying to perform task " + task + " Web Driver: " + str(error_message))
+            self.log.warning("Encountered ElementNotInteractableException when trying to perform task " + task + " Web Driver: " + str(error_message))
             element.click()
         except InvalidElementStateException as error_message:
-            print("Encountered InvalidElementStateException when trying to perform task " + task + " Web Driver: " + str(error_message))
+            self.log.warning("Encountered InvalidElementStateException when trying to perform task " + task + " Web Driver: " + str(error_message))
             element.click()
         except Exception as error_message:
-            print("Encountered Exception when trying to perform task " + task + " Web Driver: " + str(error_message))
+            self.log.warning("Encountered Exception when trying to perform task " + task + " Web Driver: " + str(error_message))
         return action_performed
 
     def __do_command(self, task: str, locator: By, value: str, input_text: str, key_button: Keys):
-        print("Performing " + task + " to the Web Element " + value + ".")
+        self.log.debug("Performing " + task + " to the Web Element " + value + ".")
         for x in range(3):
             element = self.element_factory.create_element(locator, value)
             action_performed = self.__execute(task, element, input_text, key_button)
             retry_count = x + 1
             if not action_performed:
                 if x < 3:
-                    print("Retrying Keyboard Action " + task + " for Web Element " + value + " " + retry_count + "/3.")
+                    self.log.warning("Retrying Keyboard Action " + task + " for Web Element " + value + " " + retry_count + "/3.")
                     sleep(1)
                 else:
-                    print("Failed to perform Keyboard Action " + task + " for Web Element " + value + ".")
+                    self.log.error("Failed to perform Keyboard Action " + task + " for Web Element " + value + ".")
             else:
                 break
 
@@ -75,19 +79,17 @@ class KeyboardCommands:
         self.__do_command("PRESS", locator, value, None, key_button)
 
     def __do_command(self, task: str, parent_locator: By, parent_value: str, child_locator: By, child_value: str, input_text: str, key_button: Keys):
-        print("Performing " + task + " to the Child Web Element " + child_value + " under the Parent Web Element " + parent_value + ".")
+        self.log.debug("Performing " + task + " to the Child Web Element " + child_value + " under the Parent Web Element " + parent_value + ".")
         for x in range(3):
             element = self.element_factory.create_element(parent_locator, parent_value, child_locator, child_value)
             action_performed = self.__execute(task, element, input_text, key_button)
             retry_count = x + 1
             if not action_performed:
                 if x < 3:
-                    print(
-                        "Retrying Keyboard Action " + task + " to Child Web Element " + child_value + " under the Parent Web Element " + parent_value + " " + retry_count + "/3.")
+                    self.log.warning("Retrying Keyboard Action " + task + " to Child Web Element " + child_value + " under the Parent Web Element " + parent_value + " " + retry_count + "/3.")
                     sleep(1)
                 else:
-                    print(
-                        "Failed to perform Keyboard Action " + task + " to Child Web Element " + child_value + " under the Parent Web Element " + parent_value + ".")
+                    self.log.error("Failed to perform Keyboard Action " + task + " to Child Web Element " + child_value + " under the Parent Web Element " + parent_value + ".")
             else:
                 break
 
@@ -101,19 +103,17 @@ class KeyboardCommands:
         self.__do_command("PRESS", parent_locator, parent_value, child_locator, child_value, None, key_button)
 
     def __do_command(self, task: str, parent_element: WebElement, child_locator: By, child_value: str, input_text: str, key_button: Keys):
-        print("Performing " + task + " to the Child Web Element " + child_value + " under the Parent Web Element " + str(parent_element) + ".")
+        self.log.debug("Performing " + task + " to the Child Web Element " + child_value + " under the Parent Web Element " + str(parent_element) + ".")
         for x in range(3):
             element = self.element_factory.create_element(parent_element, child_locator, child_value)
             action_performed = self.__execute(task, element, input_text, key_button)
             retry_count = x + 1
             if not action_performed:
                 if x < 3:
-                    print(
-                        "Retrying Keyboard Action " + task + " to Child Web Element " + child_value + " under the Parent Web Element " + str(parent_element) + " " + retry_count + "/3.")
+                    self.log.warning("Retrying Keyboard Action " + task + " to Child Web Element " + child_value + " under the Parent Web Element " + str(parent_element) + " " + retry_count + "/3.")
                     sleep(1)
                 else:
-                    print(
-                        "Failed to perform Keyboard Action " + task + " to Child Web Element " + child_value + " under the Parent Web Element " + str(parent_element) + ".")
+                    self.log.error("Failed to perform Keyboard Action " + task + " to Child Web Element " + child_value + " under the Parent Web Element " + str(parent_element) + ".")
             else:
                 break
 
