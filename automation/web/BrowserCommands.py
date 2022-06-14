@@ -12,7 +12,7 @@ class BrowserCommands:
         self.driver = driver
 
     def __execute_browser_action(self, task: str, input_value: str):
-        self.log.debug("Performing " + task + " Browser Action.")
+        self.log.debug("Performing " + task.replace("_", " ") + " Browser Action.")
         try:
             match task:
                 case "OPEN_TAB":
@@ -34,9 +34,9 @@ class BrowserCommands:
                 case "CLOSE_BROWSER":
                     self.driver.quit()
                 case _:
-                    self.log.error(task + " is an unsupported Browser Action.")
+                    self.log.error(task.replace("_", " ") + " is an unsupported Browser Action.")
         except Exception as error_message:
-            self.log.warning("Encountered Exception when trying to perform task " + task + " Web Driver: " + str(error_message))
+            self.log.warning("Encountered Exception when trying to perform task " + task.replace("_", " ") + " Web Driver: " + str(error_message))
 
     def open_tab(self, url: str):
         self.__execute_browser_action("OPEN_TAB", url)
@@ -66,12 +66,15 @@ class BrowserCommands:
         self.__execute_browser_action("CLOSE_BROWSER", None)
 
     def __execute_switch_action(self, task: str, input_value: str):
-        self.log.debug("Switching tab " + task)
+
         for handle in self.driver.window_handles:
             try:
                 self.driver.switch_to_window(handle)
                 if task.__eq__("TO_DEFAULT"):
+                    self.log.debug("Switching tab " + task.replace("_", " "))
                     break
+                else:
+                    self.log.debug("Switching tab " + task.replace("_", " ") + ": " + input_value)
                 match task:
                     case "BY_TITLE":
                         page_title: str = self.driver.title
@@ -86,9 +89,9 @@ class BrowserCommands:
                     case _:
                         self.log.error(task + " is an unsupported Switch Action.")
             except NoSuchWindowException as error_message:
-                self.log.warning("Encountered NoSuchWindowException when trying to perform Switch " + task + " Action: " + str(error_message))
+                self.log.warning("Encountered NoSuchWindowException when trying to perform Switch " + task.replace("_", " ") + " Action: " + str(error_message))
             except Exception as error_message:
-                self.log.warning("Encountered Exception when trying to perform Switch " + task + " Action: " + str(error_message))
+                self.log.warning("Encountered Exception when trying to perform Switch " + task.replace("_", " ") + " Action: " + str(error_message))
 
     def switch_tab_by_title(self, title: str):
         self.__execute_switch_action("BY_TITLE", title)
