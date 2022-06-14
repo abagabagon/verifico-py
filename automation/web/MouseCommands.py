@@ -53,10 +53,10 @@ class MouseCommands:
             retry_count = x + 1
             if not action_performed:
                 if x < 3:
-                    print("Retrying Mouse Action " + task + " for Web Element " + value + " " + retry_count + "/3.")
+                    print("Retrying Mouse Action " + task + " to Web Element " + value + " " + retry_count + "/3.")
                     sleep(1)
                 else:
-                    print("Failed to perform Mouse Action " + task + " for Web Element " + value + ".")
+                    print("Failed to perform Mouse Action " + task + " to Web Element " + value + ".")
             else:
                 break
 
@@ -83,10 +83,10 @@ class MouseCommands:
             retry_count = x + 1
             if not action_performed:
                 if x < 3:
-                    print("Retrying Mouse Action " + task + " for Web Element " + str(element) + " " + retry_count + "/3.")
+                    print("Retrying Mouse Action " + task + " to Child Web Element " + child_value + " under the Parent Web Element " + parent_value + " " + retry_count + "/3.")
                     sleep(1)
                 else:
-                    print("Failed to perform Mouse Action " + task + " for Web Element " + str(element) + ".")
+                    print("Failed to perform Mouse Action " + task + " to Child Web Element " + child_value + " under the Parent Web Element " + parent_value + ".")
             else:
                 break
 
@@ -113,10 +113,10 @@ class MouseCommands:
             retry_count = x + 1
             if not action_performed:
                 if x < 3:
-                    print("Retrying Mouse Action " + task + " for Web Element " + str(element) + " " + retry_count + "/3.")
+                    print("Retrying Mouse Action " + task + " to Child Web Element " + child_value + " under the Parent Web Element " + str(parent_element) + " " + retry_count + "/3.")
                     sleep(1)
                 else:
-                    print("Failed to perform Mouse Action " + task + " for Web Element " + str(element) + ".")
+                    print("Failed to perform Mouse Action " + task + " to Child Web Element " + child_value + " under the Parent Web Element " + str(parent_element) + ".")
             else:
                 break
 
