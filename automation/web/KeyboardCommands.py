@@ -27,7 +27,7 @@ class KeyboardCommands:
         self.element_factory = WebElementFactory(self.driver, self.wait)
 
     def __execute(self, action: KeyboardAction, element: WebElement, input_text: str, key_button: Keys):
-        local_task = str(action).replace("_", " ")
+        local_task = str(action).replace("_", " ").title()
         action_performed = False
         operating_system = platform.system()
         try:
@@ -61,7 +61,7 @@ class KeyboardCommands:
         return action_performed
 
     def __do_command(self, action: KeyboardAction, locator: By, value: str, input_text: str, key_button: Keys):
-        local_task = str(action).replace("_", " ")
+        local_task = str(action).replace("_", " ").title()
         self.log.debug("Performing " + local_task + " to the Web Element " + value + ".")
         for x in range(3):
             element = self.element_factory.create_element(locator, value)
@@ -86,7 +86,7 @@ class KeyboardCommands:
         self.__do_command(KeyboardAction.PRESS, locator, value, None, key_button)
 
     def __do_command(self, action: KeyboardAction, parent_locator: By, parent_value: str, child_locator: By, child_value: str, input_text: str, key_button: Keys):
-        local_task = str(action).replace("_", " ")
+        local_task = str(action).replace("_", " ").title()
         self.log.debug("Performing " + local_task + " to the Child Web Element " + child_value + " under the Parent Web Element " + parent_value + ".")
         for x in range(3):
             element = self.element_factory.create_element(parent_locator, parent_value, child_locator, child_value)
@@ -111,7 +111,7 @@ class KeyboardCommands:
         self.__do_command(KeyboardAction.PRESS, parent_locator, parent_value, child_locator, child_value, None, key_button)
 
     def __do_command(self, action: KeyboardAction, parent_element: WebElement, child_locator: By, child_value: str, input_text: str, key_button: Keys):
-        local_task = str(action).replace("_", " ")
+        local_task = str(action).replace("_", " ").title()
         self.log.debug("Performing " + local_task + " to the Child Web Element " + child_value + " under the Parent Web Element " + str(parent_element) + ".")
         for x in range(3):
             element = self.element_factory.create_element(parent_element, child_locator, child_value)

@@ -28,7 +28,7 @@ class GetCommands:
         self.retrieved_value = None
 
     def __execute(self, action: GetAction, element: WebElement, attribute: str):
-        local_task = str(action).replace("_", " ")
+        local_task = str(action).replace("_", " ").title()
         action_performed = False
         self.retrieved_value = None
         try:
@@ -52,7 +52,7 @@ class GetCommands:
         return action_performed
 
     def __do_command(self, action: GetAction, locator: By, value: str, attribute: str):
-        local_task = str(action).replace("_", " ")
+        local_task = str(action).replace("_", " ").title()
         self.log.debug("Performing " + local_task + " to the Web Element " + value + ".")
         for x in range(3):
             element = self.element_factory.create_element(locator, value)
@@ -81,7 +81,7 @@ class GetCommands:
         return dropdown_value
 
     def __do_command(self, action: GetAction, parent_locator: By, parent_value: str, child_locator: By, child_value: str, attribute: str):
-        local_task = str(action).replace("_", " ")
+        local_task = str(action).replace("_", " ").title()
         self.log.debug("Performing " + local_task + " to the Child Web Element " + child_value + " under the Parent Web Element " + parent_value + ".")
         for x in range(3):
             element = self.element_factory.create_element(parent_locator, parent_value, child_locator, child_value)
@@ -110,7 +110,7 @@ class GetCommands:
         return dropdown_value
 
     def __do_command(self, action: GetAction, parent_element, child_locator: By, child_value: str, attribute: str):
-        local_task = str(action).replace("_", " ")
+        local_task = str(action).replace("_", " ").title()
         self.log.debug("Performing " + local_task + " to the Child Web Element " + child_value + " under the Parent Web Element " + str(parent_element) + ".")
         for x in range(3):
             element = self.element_factory.create_element(parent_element, child_locator, child_value)

@@ -31,7 +31,7 @@ class BrowserCommands:
         self.driver = driver
 
     def __execute_browser_action(self, action: BrowserAction, input_value: str):
-        local_task = str(action).replace("_", " ")
+        local_task = str(action).replace("_", " ").title()
         self.log.debug("Performing " + local_task + " Browser Action.")
         try:
             match action:
@@ -86,7 +86,7 @@ class BrowserCommands:
         self.__execute_browser_action(BrowserAction.CLOSE_BROWSER, None)
 
     def __execute_switch_action(self, action: SwitchAction, input_value: str):
-        local_task = str(action).replace("_", " ")
+        local_task = str(action).replace("_", " ").title()
         for handle in self.driver.window_handles:
             try:
                 self.driver.switch_to_window(handle)

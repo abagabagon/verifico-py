@@ -20,16 +20,16 @@ class AlertCommands:
         self.wait = wait
 
     def accept_alert(self):
-        self.log.debug("Performing " + str(AlertAction.ACCEPT) + " Javascript Alert.")
+        self.log.debug("Performing " + str(AlertAction.ACCEPT).title() + " Javascript Alert.")
         alert = self.wait.wait_for_alert_to_be_present()
         alert.accept()
 
     def cancel_alert(self):
-        self.log.debug("Performing " + str(AlertAction.CANCEL) + " Javascript Alert.")
+        self.log.debug("Performing " + str(AlertAction.CANCEL).title() + " Javascript Alert.")
         alert = self.wait.wait_for_alert_to_be_present()
         alert.dismiss()
 
     def type_alert(self, input_text: str):
-        self.log.debug("Performing " + str(AlertAction.TYPE_INTO).replace("_", " ") + " Javascript Alert.")
+        self.log.debug("Performing " + str(AlertAction.TYPE_INTO).replace("_", " ").title() + " Javascript Alert.")
         alert = self.wait.wait_for_alert_to_be_present()
         alert.send_keys(input_text)

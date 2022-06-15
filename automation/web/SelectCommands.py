@@ -25,7 +25,7 @@ class SelectCommands:
 
     def __execute(self, action: SelectAction, element: WebElement, input_option: str):
         action_performed = False
-        log_task = str(action).task.replace("_", " ")
+        log_task = str(action).replace("_", " ").title()
         try:
             select = Select(element)
             option_ticked = False
@@ -51,8 +51,8 @@ class SelectCommands:
         return action_performed
 
     def __do_command(self, action: SelectAction, locator: By, value: str, input_option: str):
-        log_task = str(action).replace("_", " ")
-        self.log.debug(log_task + "ING the option: " + input_option + " from the Web Element " + value + ".")
+        log_task = str(action).replace("_", " ").title()
+        self.log.debug(log_task + "ing the option: " + input_option + " from the Web Element " + value + ".")
         for x in range(3):
             element = self.element_factory.create_element(locator, value)
             action_performed = self.__execute(action, element)
@@ -73,8 +73,8 @@ class SelectCommands:
         self.__do_command(SelectAction.DESELECT, locator, value, input_option)
 
     def __do_command(self, action: SelectAction, parent_locator: By, parent_value: str, child_locator: By, child_value: str, input_option: str):
-        log_task = str(action).replace("_", " ")
-        self.log.debug(log_task + "ING the option: " + input_option + " from the Child Web Element " + child_value + " under the Parent Web Element " + parent_value + ".")
+        log_task = str(action).replace("_", " ").title()
+        self.log.debug(log_task + "ing the option: " + input_option + " from the Child Web Element " + child_value + " under the Parent Web Element " + parent_value + ".")
         for x in range(3):
             element = self.element_factory.create_element(parent_locator, parent_value, child_locator, child_value)
             action_performed = self.__execute(action, element)
@@ -95,8 +95,8 @@ class SelectCommands:
         self.__do_command(SelectAction.DESELECT, parent_locator, parent_value, child_locator, child_value, input_option)
 
     def __do_command(self, action: SelectAction, parent_element: WebElement, child_locator: By, child_value: str, input_option: str):
-        log_task = str(action).replace("_", " ")
-        self.log.debug(log_task + "ING the option: " + input_option + " from the Child Web Element " + child_value + " under the Parent Web Element " + str(parent_element) + ".")
+        log_task = str(action).replace("_", " ").title()
+        self.log.debug(log_task + "ing the option: " + input_option + " from the Child Web Element " + child_value + " under the Parent Web Element " + str(parent_element) + ".")
         for x in range(3):
             element = self.element_factory.create_element(parent_element, child_locator, child_value)
             action_performed = self.__execute(action, element)
