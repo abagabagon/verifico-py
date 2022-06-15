@@ -67,10 +67,10 @@ class SelectCommands:
                 break
 
     def select(self, locator: By, value: str, input_option: str):
-        self.__do_command("SELECT", locator, value, input_option)
+        self.__do_command(SelectAction.SELECT, locator, value, input_option)
 
     def deselect(self, locator: By, value: str, input_option: str):
-        self.__do_command("DESELECT", locator, value, input_option)
+        self.__do_command(SelectAction.DESELECT, locator, value, input_option)
 
     def __do_command(self, action: SelectAction, parent_locator: By, parent_value: str, child_locator: By, child_value: str, input_option: str):
         log_task = str(action).task.replace("_", " ")
@@ -89,10 +89,10 @@ class SelectCommands:
                 break
 
     def select(self, parent_locator: By, parent_value: str, child_locator: By, child_value: str, input_option: str):
-        self.__do_command("SELECT", parent_locator, parent_value, child_locator, child_value, input_option)
+        self.__do_command(SelectAction.SELECT, parent_locator, parent_value, child_locator, child_value, input_option)
 
     def deselect(self, parent_locator: By, parent_value: str, child_locator: By, child_value: str, input_option: str):
-        self.__do_command("DESELECT", parent_locator, parent_value, child_locator, child_value, input_option)
+        self.__do_command(SelectAction.DESELECT, parent_locator, parent_value, child_locator, child_value, input_option)
 
     def __do_command(self, action: SelectAction, parent_element: WebElement, child_locator: By, child_value: str, input_option: str):
         log_task = str(action).task.replace("_", " ")
@@ -111,7 +111,7 @@ class SelectCommands:
                 break
 
     def select(self, parent_element: WebElement, child_locator: By, child_value: str, input_option: str):
-        self.__do_command("SELECT", parent_element, child_locator, child_value, input_option)
+        self.__do_command(SelectAction.SELECT, parent_element, child_locator, child_value, input_option)
 
     def deselect(self, parent_element: WebElement, child_locator: By, child_value: str, input_option: str):
-        self.__do_command("DESELECT", parent_element, child_locator, child_value, input_option)
+        self.__do_command(SelectAction.DESELECT, parent_element, child_locator, child_value, input_option)
