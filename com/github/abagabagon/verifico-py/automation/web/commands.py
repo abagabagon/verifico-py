@@ -7,8 +7,8 @@ from selenium.webdriver import ActionChains, Keys
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support.ui import Select
-from selenium_automation import WaitCommands
-from selenium_automation import WebElementFactory
+from selenium_utils import WaitCommands
+from selenium_utils import WebElementFactory
 from time import sleep
 import logging
 import platform
