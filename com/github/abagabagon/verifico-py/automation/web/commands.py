@@ -161,15 +161,15 @@ class BrowserCommands:
         self.__execute_switch_action(SwitchAction.TO_DEFAULT, None)
 
     def scroll(self, pixel_horizontal: int, pixel_vertical: int):
-        self.log.debug("Performing SCROLL Browser Action to coordinates " + pixel_horizontal + ", " + pixel_vertical)
+        self.log.debug("Performing SCROLL Browser Action to coordinates " + str(pixel_horizontal) + ", " + str(pixel_vertical))
         try:
-            self.driver.execute_script("window.scrollBy(" + pixel_horizontal + ", " + pixel_vertical + ")")
+            self.driver.execute_script("window.scrollBy(" + str(pixel_horizontal) + ", " + str(pixel_vertical) + ")")
         except Exception as error_message:
             self.log.warning("Encountered Exception when trying to perform SCROLL Browser Action: " + str(error_message))
 
-    def count(self, locator: By, value: str):
+    def count(self, locator: By, locator_value: str):
         self.log.debug("Performing Element Count.")
-        elements = self.driver.find_elements(locator, value);
+        elements = self.driver.find_elements(locator, locator_value);
         count = len(elements)
         return count
 
@@ -215,92 +215,93 @@ class GetCommands:
             self.log.warning("Encountered Exception when trying to perform task " + local_task + " Web Driver: " + str(error_message))
         return action_performed
 
-    def __do_command(self, action: GetAction, locator: By, value: str, attribute: str):
+    def __do_command(self, action: GetAction, locator: By, locator_value: str, attribute: str):
         local_task = str(action).replace("_", " ").title()
-        self.log.debug("Performing " + local_task + " to the Web Element " + value + ".")
+        self.log.debug("Performing " + local_task + " to the Web Element " + locator_value + ".")
         for x in range(3):
-            element = self.element_factory.create_element(locator, value)
+            element = self.element_factory.create_element(locator, locator_value)
             action_performed = self.__execute(action, element, attribute)
             retry_count = x + 1
             if not action_performed:
                 if x < 3:
-                    self.log.warning("Retrying Get Action " + local_task + " for Web Element " + value + " " + retry_count + "/3.")
+                    self.log.warning("Retrying Get Action " + local_task + " for Web Element " + locator_value + " " + retry_count + "/3.")
                     sleep(1)
                 else:
-                    self.log.error("Failed to perform Get Action " + local_task + " for Web Element " + value + ".")
+                    self.log.error("Failed to perform Get Action " + local_task + " for Web Element " + locator_value + ".")
             else:
                 break
         return self.retrieved_value
 
-    def get_text(self, locator: By, value: str):
-        text = self.__do_command(GetAction.GET_TEXT, locator, value, None)
+    def get_text(self, locator: By, locator_value: str):
+        text = self.__do_command(GetAction.GET_TEXT, locator, locator_value, None)
         return text
 
-    def get_attribute(self, locator: By, value: str, attribute: str):
-        attribute_value = self.__do_command(GetAction.GET_ATTRIBUTE, locator, value, attribute)
+    def get_attribute(self, locator: By, locator_value: str, attribute: str):
+        attribute_value = self.__do_command(GetAction.GET_ATTRIBUTE, locator, locator_value, attribute)
         return attribute_value
 
-    def get_dropdown_value(self, locator: By, value: str):
-        dropdown_value = self.__do_command(GetAction.GET_DROPDOWN, locator, value, None)
+    def get_dropdown_value(self, locator: By, locator_value: str):
+        dropdown_value = self.__do_command(GetAction.GET_DROPDOWN, locator, locator_value, None)
         return dropdown_value
 
-    def __do_command(self, action: GetAction, parent_locator: By, parent_value: str, child_locator: By, child_value: str, attribute: str):
+    def __do_command(self, action: GetAction, parent_locator: By, parent_locator_value: str, child_locator: By, child_locator_value: str, attribute: str):
         local_task = str(action).replace("_", " ").title()
-        self.log.debug("Performing " + local_task + " to the Child Web Element " + child_value + " under the Parent Web Element " + parent_value + ".")
+        self.log.debug("Performing " + local_task + " to the Child Web Element " + child_locator_value + " under the Parent Web Element " + parent_locator_value + ".")
         for x in range(3):
-            element = self.element_factory.create_element(parent_locator, parent_value, child_locator, child_value)
+            element = self.element_factory.create_element(parent_locator, parent_locator_value, child_locator, child_locator_value)
             action_performed = self.__execute(action, element, attribute)
             retry_count = x + 1
             if not action_performed:
                 if x < 3:
-                    self.log.warning("Retrying Get Action " + local_task + " to Child Web Element " + child_value + " under the Parent Web Element " + parent_value + " " + retry_count + "/3.")
+                    self.log.warning("Retrying Get Action " + local_task + " to Child Web Element " + child_locator_value + " under the Parent Web Element " + parent_locator_value + " " + retry_count + "/3.")
                     sleep(1)
                 else:
-                    self.log.error("Failed to perform Get Action " + local_task + " to Child Web Element " + child_value + " under the Parent Web Element " + parent_value + ".")
+                    self.log.error("Failed to perform Get Action " + local_task + " to Child Web Element " + child_locator_value + " under the Parent Web Element " + parent_locator_value + ".")
             else:
                 break
         return self.retrieved_value
 
-    def get_text(self, parent_locator: By, parent_value: str, child_locator: By, child_value: str):
-        text = self.__do_command(GetAction.GET_TEXT, parent_locator, parent_value, child_locator, child_value, None)
+    def get_text(self, parent_locator: By, parent_locator_value: str, child_locator: By, child_locator_value: str):
+        text = self.__do_command(GetAction.GET_TEXT, parent_locator, parent_locator_value, child_locator, child_locator_value, None)
         return text
 
-    def get_attribute(self, parent_locator: By, parent_value: str, child_locator: By, child_value: str, attribute: str):
-        attribute_value = self.__do_command(GetAction.GET_ATTRIBUTE, parent_locator, parent_value, child_locator, child_value, attribute)
+    def get_attribute(self, parent_locator: By, parent_locator_value: str, child_locator: By, child_locator_value: str, attribute: str):
+        attribute_value = self.__do_command(GetAction.GET_ATTRIBUTE, parent_locator, parent_locator_value, child_locator, child_locator_value, attribute)
         return attribute_value
 
-    def get_dropdown_value(self, parent_locator: By, parent_value: str, child_locator: By, child_value: str):
-        dropdown_value = self.__do_command(GetAction.GET_DROPDOWN, parent_locator, parent_value, child_locator, child_value, None)
+    def get_dropdown_value(self, parent_locator: By, parent_locator_value: str, child_locator: By, child_locator_value: str):
+        dropdown_value = self.__do_command(GetAction.GET_DROPDOWN, parent_locator, parent_locator_value, child_locator, child_locator_value, None)
         return dropdown_value
 
-    def __do_command(self, action: GetAction, parent_element, child_locator: By, child_value: str, attribute: str):
+    def __do_command(self, action: GetAction, parent_element, child_locator: By, child_locator_value: str, attribute: str):
         local_task = str(action).replace("_", " ").title()
-        self.log.debug("Performing " + local_task + " to the Child Web Element " + child_value + " under the Parent Web Element " + str(parent_element) + ".")
+        self.log.debug("Performing " + local_task + " to the Child Web Element " + child_locator_value + " under the Parent Web Element " + str(parent_element) + ".")
         for x in range(3):
-            element = self.element_factory.create_element(parent_element, child_locator, child_value)
+            element = self.element_factory.create_element(parent_element, child_locator, child_locator_value)
             action_performed = self.__execute(action, element, attribute)
             retry_count = x + 1
             if not action_performed:
                 if x < 3:
-                    self.log.warning("Retrying Get Action " + local_task + " to Child Web Element " + child_value + " under the Parent Web Element " + str(parent_element) + " " + retry_count + "/3.")
+                    self.log.warning("Retrying Get Action " + local_task + " to Child Web Element " + child_locator_value + " under the Parent Web Element " + str(parent_element) + " " + retry_count + "/3.")
                     sleep(1)
                 else:
-                    self.log.error("Failed to perform Get Action " + local_task + " to Child Web Element " + child_value + " under the Parent Web Element " + str(parent_element) + ".")
+                    self.log.error("Failed to perform Get Action " + local_task + " to Child Web Element " + child_locator_value + " under the Parent Web Element " + str(parent_element) + ".")
             else:
                 break
         return self.retrieved_value
 
-    def get_text(self, parent_element: WebElement, child_locator: By, child_value: str):
-        text = self.__do_command(GetAction.GET_TEXT, parent_element, child_locator, child_value, None)
+    def get_text(self, parent_element: WebElement, child_locator: By, child_locator_value: str):
+        text = self.__do_command(GetAction.GET_TEXT, parent_element, child_locator, child_locator_value, None)
         return text
 
-    def get_attribute(self, parent_element: WebElement, child_locator: By, child_value: str, attribute: str):
-        attribute_value = self.__do_command(GetAction.GET_ATTRIBUTE, parent_element, child_locator, child_value, attribute)
+    def get_attribute(self, parent_element: WebElement, child_locator: By, child_locator_value: str, attribute: str):
+        attribute_value = self.__do_command(GetAction.GET_ATTRIBUTE, parent_element, child_locator, child_locator_value, attribute)
         return attribute_value
 
-    def get_dropdown_value(self, parent_element: WebElement, child_locator: By, child_value: str):
-        dropdown_value = self.__do_command(GetAction.GET_DROPDOWN, parent_element, child_locator, child_value, None)
+    def get_dropdown_value(self, parent_element: WebElement, child_locator: By, child_locator_value: str):
+        dropdown_value = self.__do_command(GetAction.GET_DROPDOWN, parent_element, child_locator, child_locator_value, None)
         return dropdown_value
+
 
 class KeyboardAction(Enum):
     CLEAR = auto()
@@ -352,80 +353,81 @@ class KeyboardCommands:
             self.log.warning("Encountered Exception when trying to perform task " + local_task + " Web Driver: " + str(error_message))
         return action_performed
 
-    def __do_command(self, action: KeyboardAction, locator: By, value: str, input_text: str, key_button: Keys):
+    def __do_command(self, action: KeyboardAction, locator: By, locator_value: str, input_text: str, key_button: Keys):
         local_task = str(action).replace("_", " ").title()
-        self.log.debug("Performing " + local_task + " to the Web Element " + value + ".")
+        self.log.debug("Performing " + local_task + " to the Web Element " + locator_value + ".")
         for x in range(3):
-            element = self.element_factory.create_element(locator, value)
+            element = self.element_factory.create_element(locator, locator_value)
             action_performed = self.__execute(action, element, input_text, key_button)
             retry_count = x + 1
             if not action_performed:
                 if x < 3:
-                    self.log.warning("Retrying Keyboard Action " + local_task + " for Web Element " + value + " " + retry_count + "/3.")
+                    self.log.warning("Retrying Keyboard Action " + local_task + " for Web Element " + locator_value + " " + retry_count + "/3.")
                     sleep(1)
                 else:
-                    self.log.error("Failed to perform Keyboard Action " + local_task + " for Web Element " + value + ".")
+                    self.log.error("Failed to perform Keyboard Action " + local_task + " for Web Element " + locator_value + ".")
             else:
                 break
 
-    def clear(self, locator: By, value: str):
-        self.__do_command(KeyboardAction.CLEAR, locator, value, None, None)
+    def clear(self, locator: By, locator_value: str):
+        self.__do_command(KeyboardAction.CLEAR, locator, locator_value, None, None)
 
-    def type(self, locator: By, value: str, input_text: str):
-        self.__do_command(KeyboardAction.TYPE, locator, value, input_text, None)
+    def type(self, locator: By, locator_value: str, input_text: str):
+        self.__do_command(KeyboardAction.TYPE, locator, locator_value, input_text, None)
 
-    def press(self, locator: By, value: str, key_button: Keys):
-        self.__do_command(KeyboardAction.PRESS, locator, value, None, key_button)
+    def press(self, locator: By, locator_value: str, key_button: Keys):
+        self.__do_command(KeyboardAction.PRESS, locator, locator_value, None, key_button)
 
-    def __do_command(self, action: KeyboardAction, parent_locator: By, parent_value: str, child_locator: By, child_value: str, input_text: str, key_button: Keys):
+    def __do_command(self, action: KeyboardAction, parent_locator: By, parent_locator_value: str, child_locator: By, child_locator_value: str, input_text: str, key_button: Keys):
         local_task = str(action).replace("_", " ").title()
-        self.log.debug("Performing " + local_task + " to the Child Web Element " + child_value + " under the Parent Web Element " + parent_value + ".")
+        self.log.debug("Performing " + local_task + " to the Child Web Element " + child_locator_value + " under the Parent Web Element " + parent_locator_value + ".")
         for x in range(3):
-            element = self.element_factory.create_element(parent_locator, parent_value, child_locator, child_value)
+            element = self.element_factory.create_element(parent_locator, parent_locator_value, child_locator, child_locator_value)
             action_performed = self.__execute(action, element, input_text, key_button)
             retry_count = x + 1
             if not action_performed:
                 if x < 3:
-                    self.log.warning("Retrying Keyboard Action " + local_task + " to Child Web Element " + child_value + " under the Parent Web Element " + parent_value + " " + retry_count + "/3.")
+                    self.log.warning("Retrying Keyboard Action " + local_task + " to Child Web Element " + child_locator_value + " under the Parent Web Element " + parent_locator_value + " " + retry_count + "/3.")
                     sleep(1)
                 else:
-                    self.log.error("Failed to perform Keyboard Action " + local_task + " to Child Web Element " + child_value + " under the Parent Web Element " + parent_value + ".")
+                    self.log.error("Failed to perform Keyboard Action " + local_task + " to Child Web Element " + child_locator_value + " under the Parent Web Element " + parent_locator_value + ".")
             else:
                 break
 
-    def clear(self, parent_locator: By, parent_value: str, child_locator: By, child_value: str):
-        self.__do_command(KeyboardAction.CLEAR, parent_locator, parent_value, child_locator, child_value, None, None)
+    def clear(self, parent_locator: By, parent_locator_value: str, child_locator: By, child_locator_value: str):
+        self.__do_command(KeyboardAction.CLEAR, parent_locator, parent_locator_value, child_locator, child_locator_value, None, None)
 
-    def type(self, parent_locator: By, parent_value: str, child_locator: By, child_value: str, input_text: str):
-        self.__do_command(KeyboardAction.TYPE, parent_locator, parent_value, child_locator, child_value, input_text, None)
+    def type(self, parent_locator: By, parent_locator_value: str, child_locator: By, child_locator_value: str, input_text: str):
+        self.__do_command(KeyboardAction.TYPE, parent_locator, parent_locator_value, child_locator, child_locator_value, input_text, None)
 
-    def press(self, parent_locator: By, parent_value: str, child_locator: By, child_value: str, key_button: Keys):
-        self.__do_command(KeyboardAction.PRESS, parent_locator, parent_value, child_locator, child_value, None, key_button)
+    def press(self, parent_locator: By, parent_locator_value: str, child_locator: By, child_locator_value: str, key_button: Keys):
+        self.__do_command(KeyboardAction.PRESS, parent_locator, parent_locator_value, child_locator, child_locator_value, None, key_button)
 
-    def __do_command(self, action: KeyboardAction, parent_element: WebElement, child_locator: By, child_value: str, input_text: str, key_button: Keys):
+    def __do_command(self, action: KeyboardAction, parent_element: WebElement, child_locator: By, child_locator_value: str, input_text: str, key_button: Keys):
         local_task = str(action).replace("_", " ").title()
-        self.log.debug("Performing " + local_task + " to the Child Web Element " + child_value + " under the Parent Web Element " + str(parent_element) + ".")
+        self.log.debug("Performing " + local_task + " to the Child Web Element " + child_locator_value + " under the Parent Web Element " + str(parent_element) + ".")
         for x in range(3):
-            element = self.element_factory.create_element(parent_element, child_locator, child_value)
+            element = self.element_factory.create_element(parent_element, child_locator, child_locator_value)
             action_performed = self.__execute(action, element, input_text, key_button)
             retry_count = x + 1
             if not action_performed:
                 if x < 3:
-                    self.log.warning("Retrying Keyboard Action " + local_task + " to Child Web Element " + child_value + " under the Parent Web Element " + str(parent_element) + " " + retry_count + "/3.")
+                    self.log.warning("Retrying Keyboard Action " + local_task + " to Child Web Element " + child_locator_value + " under the Parent Web Element " + str(parent_element) + " " + retry_count + "/3.")
                     sleep(1)
                 else:
-                    self.log.error("Failed to perform Keyboard Action " + local_task + " to Child Web Element " + child_value + " under the Parent Web Element " + str(parent_element) + ".")
+                    self.log.error("Failed to perform Keyboard Action " + local_task + " to Child Web Element " + child_locator_value + " under the Parent Web Element " + str(parent_element) + ".")
             else:
                 break
 
-    def clear(self, parent_element: WebElement, child_locator: By, child_value: str):
-        self.__do_command(KeyboardAction.CLEAR, parent_element, child_locator, child_value, None, None)
+    def clear(self, parent_element: WebElement, child_locator: By, child_locator_value: str):
+        self.__do_command(KeyboardAction.CLEAR, parent_element, child_locator, child_locator_value, None, None)
 
-    def type(self, parent_element: WebElement, child_locator: By, child_value: str, input_text: str):
-        self.__do_command(KeyboardAction.TYPE, parent_element, child_locator, child_value, input_text, None)
+    def type(self, parent_element: WebElement, child_locator: By, child_locator_value: str, input_text: str):
+        self.__do_command(KeyboardAction.TYPE, parent_element, child_locator, child_locator_value, input_text, None)
 
-    def press(self, parent_element: WebElement, child_locator: By, child_value: str, key_button: Keys):
-        self.__do_command(KeyboardAction.PRESS, parent_element, child_locator, child_value, None, key_button)
+    def press(self, parent_element: WebElement, child_locator: By, child_locator_value: str, key_button: Keys):
+        self.__do_command(KeyboardAction.PRESS, parent_element, child_locator, child_locator_value, None, key_button)
+
 
 class MouseAction(Enum):
     CLICK = auto()
@@ -475,98 +477,99 @@ class MouseCommands:
             self.log.warning("Encountered Exception when trying to perform task " + local_task + " Web Driver: " + str(error_message))
         return action_performed
 
-    def __do_command(self, action: MouseAction, locator: By, value: str):
+    def __do_command(self, action: MouseAction, locator: By, locator_value: str):
         local_task = str(action).replace("_", " ").title()
-        self.log.debug("Performing " + local_task + " to the Web Element " + value + ".")
+        self.log.debug("Performing " + local_task + " to the Web Element " + locator_value + ".")
         for x in range(3):
-            element = self.element_factory.create_element(locator, value)
+            element = self.element_factory.create_element(locator, locator_value)
             action_performed = self.__execute(action, element)
             retry_count = x + 1
             if not action_performed:
                 if x < 3:
-                    self.log.warning("Retrying Mouse Action " + local_task + " to Web Element " + value + " " + retry_count + "/3.")
+                    self.log.warning("Retrying Mouse Action " + local_task + " to Web Element " + locator_value + " " + retry_count + "/3.")
                     sleep(1)
                 else:
-                    self.log.error("Failed to perform Mouse Action " + local_task + " to Web Element " + value + ".")
+                    self.log.error("Failed to perform Mouse Action " + local_task + " to Web Element " + locator_value + ".")
             else:
                 break
 
-    def click(self, locator: By, value: str):
-        self.__do_command(MouseAction.CLICK, locator, value)
+    def click(self, locator: By, locator_value: str):
+        self.__do_command(MouseAction.CLICK, locator, locator_value)
 
-    def click_js(self, locator: By, value: str):
-        self.__do_command(MouseAction.CLICK_JS, locator, value)
+    def click_js(self, locator: By, locator_value: str):
+        self.__do_command(MouseAction.CLICK_JS, locator, locator_value)
 
-    def click_and_hold(self, locator: By, value: str):
-        self.__do_command(MouseAction.CLICK_AND_HOLD, locator, value)
+    def click_and_hold(self, locator: By, locator_value: str):
+        self.__do_command(MouseAction.CLICK_AND_HOLD, locator, locator_value)
 
-    def double_click(self, locator: By, value: str):
-        self.__do_command(MouseAction.DOUBLE_CLICK, locator, value)
+    def double_click(self, locator: By, locator_value: str):
+        self.__do_command(MouseAction.DOUBLE_CLICK, locator, locator_value)
 
-    def point(self, locator: By, value: str):
-        self.__do_command(MouseAction.POINT, locator, value)
+    def point(self, locator: By, locator_value: str):
+        self.__do_command(MouseAction.POINT, locator, locator_value)
 
-    def __do_command(self, action: MouseAction, parent_locator: By, parent_value: str, child_locator: By, child_value: str):
+    def __do_command(self, action: MouseAction, parent_locator: By, parent_locator_value: str, child_locator: By, child_locator_value: str):
         local_task = str(action).replace("_", " ").title()
-        self.log.debug("Performing " + local_task + " to the Child Web Element " + child_value + " under the Parent Web Element " + parent_value + ".")
+        self.log.debug("Performing " + local_task + " to the Child Web Element " + child_locator_value + " under the Parent Web Element " + parent_locator_value + ".")
         for x in range(3):
-            element = self.element_factory.create_element(parent_locator, parent_value, child_locator, child_value)
+            element = self.element_factory.create_element(parent_locator, parent_locator_value, child_locator, child_locator_value)
             action_performed = self.__execute(action, element)
             retry_count = x + 1
             if not action_performed:
                 if x < 3:
-                    self.log.warning("Retrying Mouse Action " + local_task + " to Child Web Element " + child_value + " under the Parent Web Element " + parent_value + " " + retry_count + "/3.")
+                    self.log.warning("Retrying Mouse Action " + local_task + " to Child Web Element " + child_locator_value + " under the Parent Web Element " + parent_locator_value + " " + retry_count + "/3.")
                     sleep(1)
                 else:
-                    self.log.error("Failed to perform Mouse Action " + local_task + " to Child Web Element " + child_value + " under the Parent Web Element " + parent_value + ".")
+                    self.log.error("Failed to perform Mouse Action " + local_task + " to Child Web Element " + child_locator_value + " under the Parent Web Element " + parent_locator_value + ".")
             else:
                 break
 
-    def click(self, parent_locator: By, parent_value: str, child_locator: By, child_value: str):
-        self.__do_command(MouseAction.CLICK, parent_locator, parent_value, child_locator, child_value)
+    def click(self, parent_locator: By, parent_locator_value: str, child_locator: By, child_locator_value: str):
+        self.__do_command(MouseAction.CLICK, parent_locator, parent_locator_value, child_locator, child_locator_value)
 
-    def click_js(self, parent_locator: By, parent_value: str, child_locator: By, child_value: str):
-        self.__do_command(MouseAction.CLICK_JS, parent_locator, parent_value, child_locator, child_value)
+    def click_js(self, parent_locator: By, parent_locator_value: str, child_locator: By, child_locator_value: str):
+        self.__do_command(MouseAction.CLICK_JS, parent_locator, parent_locator_value, child_locator, child_locator_value)
 
-    def click_and_hold(self, parent_locator: By, parent_value: str, child_locator: By, child_value: str):
-        self.__do_command(MouseAction.CLICK_AND_HOLD, parent_locator, parent_value, child_locator, child_value)
+    def click_and_hold(self, parent_locator: By, parent_locator_value: str, child_locator: By, child_locator_value: str):
+        self.__do_command(MouseAction.CLICK_AND_HOLD, parent_locator, parent_locator_value, child_locator, child_locator_value)
 
-    def double_click(self, parent_locator: By, parent_value: str, child_locator: By, child_value: str):
-        self.__do_command(MouseAction.DOUBLE_CLICK, parent_locator, parent_value, child_locator, child_value)
+    def double_click(self, parent_locator: By, parent_locator_value: str, child_locator: By, child_locator_value: str):
+        self.__do_command(MouseAction.DOUBLE_CLICK, parent_locator, parent_locator_value, child_locator, child_locator_value)
 
-    def point(self, parent_locator: By, parent_value: str, child_locator: By, child_value: str):
-        self.__do_command(MouseAction.POINT, parent_locator, parent_value, child_locator, child_value)
+    def point(self, parent_locator: By, parent_locator_value: str, child_locator: By, child_locator_value: str):
+        self.__do_command(MouseAction.POINT, parent_locator, parent_locator_value, child_locator, child_locator_value)
 
-    def __do_command(self, action: MouseAction, parent_element: WebElement, child_locator: By, child_value: str):
+    def __do_command(self, action: MouseAction, parent_element: WebElement, child_locator: By, child_locator_value: str):
         local_task = str(action).replace("_", " ").title()
-        self.log.debug("Performing " + local_task + " to the Child Web Element " + child_value + " under the Parent Web Element " + str(parent_element) + ".")
+        self.log.debug("Performing " + local_task + " to the Child Web Element " + child_locator_value + " under the Parent Web Element " + str(parent_element) + ".")
         for x in range(3):
-            element = self.element_factory.create_element(parent_element, child_locator, child_value)
+            element = self.element_factory.create_element(parent_element, child_locator, child_locator_value)
             action_performed = self.__execute(action, element)
             retry_count = x + 1
             if not action_performed:
                 if x < 3:
-                    self.log.warning("Retrying Mouse Action " + local_task + " to Child Web Element " + child_value + " under the Parent Web Element " + str(parent_element) + " " + retry_count + "/3.")
+                    self.log.warning("Retrying Mouse Action " + local_task + " to Child Web Element " + child_locator_value + " under the Parent Web Element " + str(parent_element) + " " + retry_count + "/3.")
                     sleep(1)
                 else:
-                    self.log.error("Failed to perform Mouse Action " + local_task + " to Child Web Element " + child_value + " under the Parent Web Element " + str(parent_element) + ".")
+                    self.log.error("Failed to perform Mouse Action " + local_task + " to Child Web Element " + child_locator_value + " under the Parent Web Element " + str(parent_element) + ".")
             else:
                 break
 
-    def click(self, parent_element: WebElement, child_locator: By, child_value: str):
-        self.__do_command(MouseAction.CLICK, parent_element, child_locator, child_value)
+    def click(self, parent_element: WebElement, child_locator: By, child_locator_value: str):
+        self.__do_command(MouseAction.CLICK, parent_element, child_locator, child_locator_value)
 
-    def click_js(self, parent_element: WebElement, child_locator: By, child_value: str):
-        self.__do_command(MouseAction.CLICK_JS, parent_element, child_locator, child_value)
+    def click_js(self, parent_element: WebElement, child_locator: By, child_locator_value: str):
+        self.__do_command(MouseAction.CLICK_JS, parent_element, child_locator, child_locator_value)
 
-    def click_and_hold(self, parent_element: WebElement, child_locator: By, child_value: str):
-        self.__do_command(MouseAction.CLICK_AND_HOLD, parent_element, child_locator, child_value)
+    def click_and_hold(self, parent_element: WebElement, child_locator: By, child_locator_value: str):
+        self.__do_command(MouseAction.CLICK_AND_HOLD, parent_element, child_locator, child_locator_value)
 
-    def double_click(self, parent_element: WebElement, child_locator: By, child_value: str):
-        self.__do_command(MouseAction.DOUBLE_CLICK, parent_element, child_locator, child_value)
+    def double_click(self, parent_element: WebElement, child_locator: By, child_locator_value: str):
+        self.__do_command(MouseAction.DOUBLE_CLICK, parent_element, child_locator, child_locator_value)
 
-    def point(self, parent_element: WebElement, child_locator: By, child_value: str):
-        self.__do_command(MouseAction.POINT, parent_element, child_locator, child_value)
+    def point(self, parent_element: WebElement, child_locator: By, child_locator_value: str):
+        self.__do_command(MouseAction.POINT, parent_element, child_locator, child_locator_value)
+
 
 class SelectAction(Enum):
     SELECT = auto()
@@ -609,68 +612,68 @@ class SelectCommands:
             self.log.warning("Encountered Exception when trying to perform task " + log_task + " Web Driver: " + str(error_message))
         return action_performed
 
-    def __do_command(self, action: SelectAction, locator: By, value: str, input_option: str):
+    def __do_command(self, action: SelectAction, locator: By, locator_value: str, input_option: str):
         log_task = str(action).replace("_", " ").title()
-        self.log.debug(log_task + "ing the option: " + input_option + " from the Web Element " + value + ".")
+        self.log.debug(log_task + "ing the option: " + input_option + " from the Web Element " + locator_value + ".")
         for x in range(3):
-            element = self.element_factory.create_element(locator, value)
+            element = self.element_factory.create_element(locator, locator_value)
             action_performed = self.__execute(action, element)
             retry_count = x + 1
             if not action_performed:
                 if x < 3:
-                    self.log.warning("Retrying Select Action " + log_task + " to Web Element " + value + " " + retry_count + "/3.")
+                    self.log.warning("Retrying Select Action " + log_task + " to Web Element " + locator_value + " " + retry_count + "/3.")
                     sleep(1)
                 else:
-                    self.log.error("Failed to perform Select Action " + log_task + " to Web Element " + value + ".")
+                    self.log.error("Failed to perform Select Action " + log_task + " to Web Element " + locator_value + ".")
             else:
                 break
 
-    def select(self, locator: By, value: str, input_option: str):
-        self.__do_command(SelectAction.SELECT, locator, value, input_option)
+    def select(self, locator: By, locator_value: str, input_option: str):
+        self.__do_command(SelectAction.SELECT, locator, locator_value, input_option)
 
-    def deselect(self, locator: By, value: str, input_option: str):
-        self.__do_command(SelectAction.DESELECT, locator, value, input_option)
+    def deselect(self, locator: By, locator_value: str, input_option: str):
+        self.__do_command(SelectAction.DESELECT, locator, locator_value, input_option)
 
-    def __do_command(self, action: SelectAction, parent_locator: By, parent_value: str, child_locator: By, child_value: str, input_option: str):
+    def __do_command(self, action: SelectAction, parent_locator: By, parent_locator_value: str, child_locator: By, child_locator_value: str, input_option: str):
         log_task = str(action).replace("_", " ").title()
-        self.log.debug(log_task + "ing the option: " + input_option + " from the Child Web Element " + child_value + " under the Parent Web Element " + parent_value + ".")
+        self.log.debug(log_task + "ing the option: " + input_option + " from the Child Web Element " + child_locator_value + " under the Parent Web Element " + parent_locator_value + ".")
         for x in range(3):
-            element = self.element_factory.create_element(parent_locator, parent_value, child_locator, child_value)
+            element = self.element_factory.create_element(parent_locator, parent_locator_value, child_locator, child_locator_value)
             action_performed = self.__execute(action, element)
             retry_count = x + 1
             if not action_performed:
                 if x < 3:
-                    self.log.warning("Retrying Select Action " + log_task + " to Child Web Element " + child_value + " under the Parent Web Element " + parent_value + " " + retry_count + "/3.")
+                    self.log.warning("Retrying Select Action " + log_task + " to Child Web Element " + child_locator_value + " under the Parent Web Element " + parent_locator_value + " " + retry_count + "/3.")
                     sleep(1)
                 else:
-                    self.log.error("Failed to perform Select Action " + log_task + " to Child Web Element " + child_value + " under the Parent Web Element " + parent_value + ".")
+                    self.log.error("Failed to perform Select Action " + log_task + " to Child Web Element " + child_locator_value + " under the Parent Web Element " + parent_locator_value + ".")
             else:
                 break
 
-    def select(self, parent_locator: By, parent_value: str, child_locator: By, child_value: str, input_option: str):
-        self.__do_command(SelectAction.SELECT, parent_locator, parent_value, child_locator, child_value, input_option)
+    def select(self, parent_locator: By, parent_locator_value: str, child_locator: By, child_locator_value: str, input_option: str):
+        self.__do_command(SelectAction.SELECT, parent_locator, parent_locator_value, child_locator, child_locator_value, input_option)
 
-    def deselect(self, parent_locator: By, parent_value: str, child_locator: By, child_value: str, input_option: str):
-        self.__do_command(SelectAction.DESELECT, parent_locator, parent_value, child_locator, child_value, input_option)
+    def deselect(self, parent_locator: By, parent_locator_value: str, child_locator: By, child_locator_value: str, input_option: str):
+        self.__do_command(SelectAction.DESELECT, parent_locator, parent_locator_value, child_locator, child_locator_value, input_option)
 
-    def __do_command(self, action: SelectAction, parent_element: WebElement, child_locator: By, child_value: str, input_option: str):
+    def __do_command(self, action: SelectAction, parent_element: WebElement, child_locator: By, child_locator_value: str, input_option: str):
         log_task = str(action).replace("_", " ").title()
-        self.log.debug(log_task + "ing the option: " + input_option + " from the Child Web Element " + child_value + " under the Parent Web Element " + str(parent_element) + ".")
+        self.log.debug(log_task + "ing the option: " + input_option + " from the Child Web Element " + child_locator_value + " under the Parent Web Element " + str(parent_element) + ".")
         for x in range(3):
-            element = self.element_factory.create_element(parent_element, child_locator, child_value)
+            element = self.element_factory.create_element(parent_element, child_locator, child_locator_value)
             action_performed = self.__execute(action, element)
             retry_count = x + 1
             if not action_performed:
                 if x < 3:
-                    self.log.warning("Retrying Select Action " + log_task + " to Child Web Element " + child_value + " under the Parent Web Element " + str(parent_element) + " " + retry_count + "/3.")
+                    self.log.warning("Retrying Select Action " + log_task + " to Child Web Element " + child_locator_value + " under the Parent Web Element " + str(parent_element) + " " + retry_count + "/3.")
                     sleep(1)
                 else:
-                    self.log.error("Failed to perform Select Action " + log_task + " to Child Web Element " + child_value + " under the Parent Web Element " + str(parent_element) + ".")
+                    self.log.error("Failed to perform Select Action " + log_task + " to Child Web Element " + child_locator_value + " under the Parent Web Element " + str(parent_element) + ".")
             else:
                 break
 
-    def select(self, parent_element: WebElement, child_locator: By, child_value: str, input_option: str):
-        self.__do_command(SelectAction.SELECT, parent_element, child_locator, child_value, input_option)
+    def select(self, parent_element: WebElement, child_locator: By, child_locator_value: str, input_option: str):
+        self.__do_command(SelectAction.SELECT, parent_element, child_locator, child_locator_value, input_option)
 
-    def deselect(self, parent_element: WebElement, child_locator: By, child_value: str, input_option: str):
-        self.__do_command(SelectAction.DESELECT, parent_element, child_locator, child_value, input_option)
+    def deselect(self, parent_element: WebElement, child_locator: By, child_locator_value: str, input_option: str):
+        self.__do_command(SelectAction.DESELECT, parent_element, child_locator, child_locator_value, input_option)
