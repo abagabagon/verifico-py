@@ -25,7 +25,7 @@ class ValueAssertion(Enum):
 
 class ValueAssertions:
 
-    actualValue: str
+    actual_value: str
 
     def __init__(self, driver: webdriver, wait: WaitCommands):
         self.log = logging.getLogger(__name__)
@@ -33,76 +33,76 @@ class ValueAssertions:
         self.wait = wait
         self.element_factory = WebElementFactory(self.driver, self.wait)
 
-    def __execute(self, assertion: ValueAssertion, element: WebElement, attribute: str, value: str):
+    def __execute(self, assertion: ValueAssertion, element: WebElement, attribute: str, input_value: str):
         local_task = str(assertion).replace("_", " ").title()
         select: Select
         status: bool = False
         try:
             match assertion:
                 case ValueAssertion.URL:
-                    self.actualValue = self.driver.current_url.strip()
-                    status = self.actualValue.__eq__(value)
+                    self.actual_value = self.driver.current_url.strip()
+                    status = self.actual_value.__eq__(input_value)
                 case ValueAssertion.PARTIAL_URL:
-                    self.actualValue = self.driver.current_url.strip()
-                    status = value in self.actualValue
+                    self.actual_value = self.driver.current_url.strip()
+                    status = input_value in self.actual_value
                 case ValueAssertion.TITLE:
-                    self.actualValue = self.driver.title.strip()
-                    status = self.actualValue.__eq__(value)
+                    self.actual_value = self.driver.title.strip()
+                    status = self.actual_value.__eq__(input_value)
                 case ValueAssertion.PARTIAL_TITLE:
-                    self.actualValue = self.driver.title.strip()
-                    status = value in self.actualValue
+                    self.actual_value = self.driver.title.strip()
+                    status = input_value in self.actual_value
                 case ValueAssertion.ATTRIBUTE:
-                    self.actualValue = element.get_attribute(attribute)
-                    if self.actualValue is None:
-                        status = self.actualValue.__eq__(value)
+                    self.actual_value = element.get_attribute(attribute)
+                    if self.actual_value is None:
+                        status = self.actual_value.__eq__(input_value)
                     else:
                         status = False
                 case ValueAssertion.PARTIAL_ATTRIBUTE:
-                    self.actualValue = element.get_attribute(attribute)
-                    if self.actualValue is None:
-                        status = value in self.actualValue
+                    self.actual_value = element.get_attribute(attribute)
+                    if self.actual_value is None:
+                        status = input_value in self.actual_value
                     else:
                         status = False
                 case ValueAssertion.DROPDOWN:
                     select = Select(element)
-                    self.actualValue = select.first_selected_option.strip()
-                    status = self.actualValue.__eq__(value)
+                    self.actual_value = select.first_selected_option.strip()
+                    status = self.actual_value.__eq__(input_value)
                 case ValueAssertion.PARTIAL_DROPDOWN:
                     select = Select(element)
-                    self.actualValue = select.first_selected_option.strip()
-                    status = value in self.actualValue
+                    self.actual_value = select.first_selected_option.strip()
+                    status = input_value in self.actual_value
                 case ValueAssertion.TEXT:
-                    self.actualValue = element.text
-                    status = self.actualValue.__eq__(value)
+                    self.actual_value = element.text
+                    status = self.actual_value.__eq__(input_value)
                 case ValueAssertion.PARTIAL_TEXT:
-                    self.actualValue = element.text
-                    status = value in self.actualValue
+                    self.actual_value = element.text
+                    status = input_value in self.actual_value
                 case ValueAssertion.ALERT_MESSAGE:
                     alert: Alert = self.wait.wait_for_alert_to_be_present()
-                    self.actualValue = alert.text
-                    status = self.actualValue.__eq__(value)
+                    self.actual_value = alert.text
+                    status = self.actual_value.__eq__(input_value)
                 case _:
                     self.log.error(local_task + " is an unsupported Value Assertion.")
         except Exception as error_message:
             self.log.warning("Encountered Exception when trying to perform task " + local_task + " Web Driver: " + str(error_message))
         return status
 
-    def __is_equal(self, assertion: ValueAssertion, element: WebElement, attribute: str, value: str):
-        status: bool = self.__execute(assertion, element, attribute, value)
+    def __is_equal(self, assertion: ValueAssertion, element: WebElement, attribute: str, input_value: str):
+        status: bool = self.__execute(assertion, element, attribute, input_value)
         local_task = str(assertion).replace("_", " ").title()
         if status:
-            self.log.debug(local_task + " Value is \"" + value + "\".")
+            self.log.debug(local_task + " Value is \"" + input_value + "\".")
         else:
-            self.log.error(local_task + " Value is not \"" + value + "\". Actual value is \"" + self.actualValue + "\".");
+            self.log.error(local_task + " Value is not \"" + input_value + "\". Actual locator_value is \"" + self.actual_value + "\".")
         return status
 
-    def __is_not_equal(self, assertion: ValueAssertion, element: WebElement, attribute: str, value: str):
-        status: bool = self.__execute(assertion, element, attribute, value)
+    def __is_not_equal(self, assertion: ValueAssertion, element: WebElement, attribute: str, input_value: str):
+        status: bool = self.__execute(assertion, element, attribute, input_value)
         local_task = str(assertion).replace("_", " ").title()
         if status:
-            self.log.error(local_task + " Value is \"" + value + "\".")
+            self.log.error(local_task + " Value is \"" + input_value + "\".")
         else:
-            self.log.debug(local_task + " Value is not \"" + value + "\". Actual value is \"" + self.actualValue + "\".");
+            self.log.debug(local_task + " Value is not \"" + input_value + "\". Actual locator_value is \"" + self.actual_value + "\".")
         return status
 
     def see_url(self, url: str):
@@ -137,123 +137,123 @@ class ValueAssertions:
         status: bool = self.__is_not_equal(ValueAssertion.PARTIAL_TITLE, None, None, title)
         return status
 
-    def see_attribute_value(self, locator: By, value: str, attribute: str, attribute_value: str):
-        element = self.element_factory.create_element(locator, value)
+    def see_attribute_value(self, locator: By, locator_value: str, attribute: str, attribute_value: str):
+        element = self.element_factory.create_element(locator, locator_value)
         status: bool = self.__is_equal(ValueAssertion.ATTRIBUTE, element, attribute, attribute_value)
         return status
 
-    def see_partial_attribute_value(self, locator: By, value: str, attribute: str, attribute_value: str):
-        element = self.element_factory.create_element(locator, value)
+    def see_partial_attribute_value(self, locator: By, locator_value: str, attribute: str, attribute_value: str):
+        element = self.element_factory.create_element(locator, locator_value)
         status: bool = self.__is_equal(ValueAssertion.PARTIAL_ATTRIBUTE, element, attribute, attribute_value)
         return status
 
-    def dont_see_attribute_value(self, locator: By, value: str, attribute: str, attribute_value: str):
-        element = self.element_factory.create_element(locator, value)
+    def dont_see_attribute_value(self, locator: By, locator_value: str, attribute: str, attribute_value: str):
+        element = self.element_factory.create_element(locator, locator_value)
         status: bool = self.__is_not_equal(ValueAssertion.ATTRIBUTE, element, attribute, attribute_value)
         return status
 
-    def dont_see_partial_attribute_value(self, locator: By, value: str, attribute: str, attribute_value: str):
-        element = self.element_factory.create_element(locator, value)
+    def dont_see_partial_attribute_value(self, locator: By, locator_value: str, attribute: str, attribute_value: str):
+        element = self.element_factory.create_element(locator, locator_value)
         status: bool = self.__is_not_equal(ValueAssertion.PARTIAL_ATTRIBUTE, element, attribute, attribute_value)
         return status
 
-    def see_attribute_value(self, parent_locator: By, parent_value: str, child_locator: By, child_value, attribute: str, attribute_value: str):
-        element = self.element_factory.create_element(parent_locator, parent_value, child_locator, child_value)
+    def see_attribute_value(self, parent_locator: By, parent_locator_value: str, child_locator: By, child_locator_value, attribute: str, attribute_value: str):
+        element = self.element_factory.create_element(parent_locator, parent_locator_value, child_locator, child_locator_value)
         status: bool = self.__is_equal(ValueAssertion.ATTRIBUTE, element, attribute, attribute_value)
         return status
 
-    def see_partial_attribute_value(self, parent_locator: By, parent_value: str, child_locator: By, child_value, attribute: str, attribute_value: str):
-        element = self.element_factory.create_element(parent_locator, parent_value, child_locator, child_value)
+    def see_partial_attribute_value(self, parent_locator: By, parent_locator_value: str, child_locator: By, child_locator_value, attribute: str, attribute_value: str):
+        element = self.element_factory.create_element(parent_locator, parent_locator_value, child_locator, child_locator_value)
         status: bool = self.__is_equal(ValueAssertion.PARTIAL_ATTRIBUTE, element, attribute, attribute_value)
         return status
 
-    def dont_see_attribute_value(self, parent_locator: By, parent_value: str, child_locator: By, child_value, attribute: str, attribute_value: str):
-        element = self.element_factory.create_element(parent_locator, parent_value, child_locator, child_value)
+    def dont_see_attribute_value(self, parent_locator: By, parent_locator_value: str, child_locator: By, child_locator_value, attribute: str, attribute_value: str):
+        element = self.element_factory.create_element(parent_locator, parent_locator_value, child_locator, child_locator_value)
         status: bool = self.__is_not_equal(ValueAssertion.ATTRIBUTE, element, attribute, attribute_value)
         return status
 
-    def dont_see_partial_attribute_value(self, parent_locator: By, parent_value: str, child_locator: By, child_value, attribute: str, attribute_value: str):
-        element = self.element_factory.create_element(parent_locator, parent_value, child_locator, child_value)
+    def dont_see_partial_attribute_value(self, parent_locator: By, parent_locator_value: str, child_locator: By, child_locator_value, attribute: str, attribute_value: str):
+        element = self.element_factory.create_element(parent_locator, parent_locator_value, child_locator, child_locator_value)
         status: bool = self.__is_not_equal(ValueAssertion.PARTIAL_ATTRIBUTE, element, attribute, attribute_value)
         return status
 
-    def see_attribute_value(self, parent_locator: WebElement, child_locator: By, child_value, attribute: str, attribute_value: str):
-        element = self.element_factory.create_element(parent_locator, child_locator, child_value)
+    def see_attribute_value(self, parent_locator: WebElement, child_locator: By, child_locator_value, attribute: str, attribute_value: str):
+        element = self.element_factory.create_element(parent_locator, child_locator, child_locator_value)
         status: bool = self.__is_equal(ValueAssertion.ATTRIBUTE, element, attribute, attribute_value)
         return status
 
-    def see_partial_attribute_value(self, parent_locator: WebElement, child_locator: By, child_value, attribute: str, attribute_value: str):
-        element = self.element_factory.create_element(parent_locator, child_locator, child_value)
+    def see_partial_attribute_value(self, parent_locator: WebElement, child_locator: By, child_locator_value, attribute: str, attribute_value: str):
+        element = self.element_factory.create_element(parent_locator, child_locator, child_locator_value)
         status: bool = self.__is_equal(ValueAssertion.PARTIAL_ATTRIBUTE, element, attribute, attribute_value)
         return status
 
-    def dont_see_attribute_value(self, parent_locator: WebElement, child_locator: By, child_value, attribute: str, attribute_value: str):
-        element = self.element_factory.create_element(parent_locator, child_locator, child_value)
+    def dont_see_attribute_value(self, parent_locator: WebElement, child_locator: By, child_locator_value, attribute: str, attribute_value: str):
+        element = self.element_factory.create_element(parent_locator, child_locator, child_locator_value)
         status: bool = self.__is_not_equal(ValueAssertion.ATTRIBUTE, element, attribute, attribute_value)
         return status
 
-    def dont_see_partial_attribute_value(self, parent_locator: WebElement, child_locator: By, child_value, attribute: str, attribute_value: str):
-        element = self.element_factory.create_element(parent_locator, child_locator, child_value)
+    def dont_see_partial_attribute_value(self, parent_locator: WebElement, child_locator: By, child_locator_value, attribute: str, attribute_value: str):
+        element = self.element_factory.create_element(parent_locator, child_locator, child_locator_value)
         status: bool = self.__is_not_equal(ValueAssertion.PARTIAL_ATTRIBUTE, element, attribute, attribute_value)
         return status
 
-    def see_text(self, locator: By, value: str, text_value: str):
-        element = self.element_factory.create_element(locator, value)
+    def see_text(self, locator: By, locator_value: str, text_value: str):
+        element = self.element_factory.create_element(locator, locator_value)
         status: bool = self.__is_equal(ValueAssertion.TEXT, element, None, text_value)
         return status
 
-    def see_partial_text(self, locator: By, value: str, text_value: str):
-        element = self.element_factory.create_element(locator, value)
+    def see_partial_text(self, locator: By, locator_value: str, text_value: str):
+        element = self.element_factory.create_element(locator, locator_value)
         status: bool = self.__is_equal(ValueAssertion.PARTIAL_TEXT, element, None, text_value)
         return status
 
-    def dont_see_text(self, locator: By, value: str, text_value: str):
-        element = self.element_factory.create_element(locator, value)
+    def dont_see_text(self, locator: By, locator_value: str, text_value: str):
+        element = self.element_factory.create_element(locator, locator_value)
         status: bool = self.__is_not_equal(ValueAssertion.TEXT, element, None, text_value)
         return status
 
-    def dont_see_partial_text(self, locator: By, value: str, text_value: str):
-        element = self.element_factory.create_element(locator, value)
+    def dont_see_partial_text(self, locator: By, locator_value: str, text_value: str):
+        element = self.element_factory.create_element(locator, locator_value)
         status: bool = self.__is_not_equal(ValueAssertion.PARTIAL_TEXT, element, None, text_value)
         return status
 
-    def see_text(self, parent_locator: By, parent_value: str, child_locator: By, child_value, text_value: str):
-        element = self.element_factory.create_element(parent_locator, parent_value, child_locator, child_value)
+    def see_text(self, parent_locator: By, parent_locator_value: str, child_locator: By, child_locator_value, text_value: str):
+        element = self.element_factory.create_element(parent_locator, parent_locator_value, child_locator, child_locator_value)
         status: bool = self.__is_equal(ValueAssertion.TEXT, element, None, text_value)
         return status
 
-    def see_partial_text(self, parent_locator: By, parent_value: str, child_locator: By, child_value, text_value: str):
-        element = self.element_factory.create_element(parent_locator, parent_value, child_locator, child_value)
+    def see_partial_text(self, parent_locator: By, parent_locator_value: str, child_locator: By, child_locator_value, text_value: str):
+        element = self.element_factory.create_element(parent_locator, parent_locator_value, child_locator, child_locator_value)
         status: bool = self.__is_equal(ValueAssertion.PARTIAL_TEXT, element, None, text_value)
         return status
 
-    def dont_see_text(self, parent_locator: By, parent_value: str, child_locator: By, child_value, text_value: str):
-        element = self.element_factory.create_element(parent_locator, parent_value, child_locator, child_value)
+    def dont_see_text(self, parent_locator: By, parent_locator_value: str, child_locator: By, child_locator_value, text_value: str):
+        element = self.element_factory.create_element(parent_locator, parent_locator_value, child_locator, child_locator_value)
         status: bool = self.__is_not_equal(ValueAssertion.TEXT, element, None, text_value)
         return status
 
-    def dont_see_partial_text(self, parent_locator: By, parent_value: str, child_locator: By, child_value, text_value: str):
-        element = self.element_factory.create_element(parent_locator, parent_value, child_locator, child_value)
+    def dont_see_partial_text(self, parent_locator: By, parent_locator_value: str, child_locator: By, child_locator_value, text_value: str):
+        element = self.element_factory.create_element(parent_locator, parent_locator_value, child_locator, child_locator_value)
         status: bool = self.__is_not_equal(ValueAssertion.PARTIAL_TEXT, element, None, text_value)
         return status
 
-    def see_text(self, parent_locator: WebElement, child_locator: By, child_value, text_value: str):
-        element = self.element_factory.create_element(parent_locator, child_locator, child_value)
+    def see_text(self, parent_locator: WebElement, child_locator: By, child_locator_value, text_value: str):
+        element = self.element_factory.create_element(parent_locator, child_locator, child_locator_value)
         status: bool = self.__is_equal(ValueAssertion.TEXT, element, None, text_value)
         return status
 
-    def see_partial_text(self, parent_locator: WebElement, child_locator: By, child_value, text_value: str):
-        element = self.element_factory.create_element(parent_locator, child_locator, child_value)
+    def see_partial_text(self, parent_locator: WebElement, child_locator: By, child_locator_value, text_value: str):
+        element = self.element_factory.create_element(parent_locator, child_locator, child_locator_value)
         status: bool = self.__is_equal(ValueAssertion.PARTIAL_TEXT, element, None, text_value)
         return status
 
-    def dont_see_text(self, parent_locator: WebElement, child_locator: By, child_value, text_value: str):
-        element = self.element_factory.create_element(parent_locator, child_locator, child_value)
+    def dont_see_text(self, parent_locator: WebElement, child_locator: By, child_locator_value, text_value: str):
+        element = self.element_factory.create_element(parent_locator, child_locator, child_locator_value)
         status: bool = self.__is_not_equal(ValueAssertion.TEXT, element, None, text_value)
         return status
 
-    def dont_see_partial_text(self, parent_locator: WebElement, child_locator: By, child_value, text_value: str):
-        element = self.element_factory.create_element(parent_locator, child_locator, child_value)
+    def dont_see_partial_text(self, parent_locator: WebElement, child_locator: By, child_locator_value, text_value: str):
+        element = self.element_factory.create_element(parent_locator, child_locator, child_locator_value)
         status: bool = self.__is_not_equal(ValueAssertion.PARTIAL_TEXT, element, None, text_value)
         return status
 
