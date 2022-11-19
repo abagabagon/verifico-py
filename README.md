@@ -1,11 +1,12 @@
+# Verifico Python
 
-# **Background**
+## **Background**
 As observed, testing of certain projects can involve web-based applications. Given that the goal is to automate testing, a web-based automation tool is a must.
 
-# Automation
+## Automation
 To eliminate learning curve, Selenium Commands are wrapped into Web Application Automation Commands that are accessible into classes from which related commands are grouped. Note that for commands that manipulates Web Elements, variations of the commands are created to accommodate actions for target Web Elements that are nested (e. g. tables, lists, etc.). Available Command Classes are shown below:
 
-## **Browser Commands**
+### **Browser Commands**
 
 Browser Commands contains functions relating to actions being done by the user at the Web Browser. Class name for this is `BrowserCommands`.
 
@@ -40,7 +41,7 @@ self.browser.refresh()
 | `close_browser`           | Closes Web Browser                                          |
 | `count`                   | Counts instance of the Web Element of the specified Locator |
 
-### **Browser Support**
+#### **Browser Support**
 Supported Web Browsers are as follows:
 * Google Chrome
 * Chromium
@@ -50,7 +51,7 @@ Supported Web Browsers are as follows:
 * Microsoft Edge
 * Internet Explorer
 
-## **Mouse Commands**
+### **Mouse Commands**
 
 Mouse Commands contains functions pertaining to mouse actions done by a user at a Web Page. Class for this is `MouseCommands`.
 
@@ -71,7 +72,7 @@ self.mouse_command.click((By.XPATH, "//button[@name='Search']"))
 | `double_click`   | Double-clicks the Web Element of the specified Locator.                                        |
 | `drag_and_drop`  | Drags a Web Element and drops it at target Web Element. Used for Elements that can be dragged. |
 
-## **Keyboard Commands**
+### **Keyboard Commands**
 
 Keyboard Commands contains functions pertaining to keyboard actions done by a user in a Web Page. Class for this is `KeyboardCommands`.
 
@@ -90,7 +91,7 @@ self.keyboard_command.type((By.XPATH, "//input[@name='password']", "password123"
 | `press`  | Simulates pressing of characters into the Web Element of the specified Locator.                                             |
 | `clear`  | Clears value of the Web Element of the specified Locator. Applicable for INPUT and TEXTAREA Web Elements.                   |
 
-## **Select Commands**
+### **Select Commands**
 
 Select Commands contains functions pertaining to actions done by a user on drop-down elements in a Web Page. Class for this is `SelectCommands`.
 
@@ -107,7 +108,7 @@ self.select_command.select((By.XPATH, "//select[@type='member-type']", "Guest"))
 | `select`   | Selects a Drop-down List Web Element Option of the specified Locator.    |
 | `deselect` | De-selects a Drop-down List Web Element Option of the specified Locator. |
 
-## **Get Commands**
+### **Get Commands**
 
 Get Commands contains functions pertaining to get value actions done by a user in a Web Page. Class for this is `GetCommands`.
 
@@ -125,7 +126,7 @@ self.header = self.get_command.getText((By.XPATH, "//h1[@name='Login Header']"))
 | `get_attribute_value` | Gets the attribute value of the Web Element of the specified Locator.      |
 | `get_dropdown_value`  | Gets the drop-down list value of the Web Element of the specified Locator. |
 
-## **Alert Commands**
+### **Alert Commands**
 
 Alert Commands contains functions pertaining to Javascript Alerts in a Web Page. Class for this is `AlertCommands`.
 
@@ -144,7 +145,7 @@ self.alert_command.accept_alert()
 | `cancel_alert` | Cancels Javascript Alert                       |
 | `type_alert`   | Simulates typing at Javascript Alert Text Box  |
 
-## **Value Assertions**
+### **Value Assertions**
 
 Value Assertions contains functions pertaining to checking of values done by a user in a Web Page. Class for this is `ValueAssertions`.
 
@@ -187,7 +188,7 @@ self.value_assertion.see_attribute_value((By.XPATH, "//input[@id='search-box']",
 | `see_alert_message`                   | Verifies Javascript Alert Message displayed if equal to expected message                                                    |
 | `dont_see_alert_message`              | Verifies Javascript Alert Message displayed if not equal to expected message                                                |
 
-## **State Assertions**
+### **State Assertions**
 
 State Assertions contains functions pertaining to checking the state of Web Elements done by a user in a Web Page. Class for this is `StateAssertions`.
 
