@@ -1,422 +1,336 @@
-from enum import Enum, auto
+import logging
+import os
+import platform
+
 from selenium import webdriver
-from selenium.common import TimeoutException, WebDriverException
-from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options as ChromeOptions
+from selenium.webdriver.chrome.service import Service as Service
 from selenium.webdriver.common.by import By
+from selenium.webdriver.edge.options import Options as EdgeOptions
+from selenium.webdriver.edge.service import Service as EdgeService
+from selenium.webdriver.firefox.options import Options as FirefoxOptions
+from selenium.webdriver.firefox.service import Service as FirefoxService
+from selenium.webdriver.ie.service import Service as IEService
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.wait import WebDriverWait
-from webdriver_manager.core.utils import ChromeType
 from webdriver_manager.chrome import ChromeDriverManager
+from webdriver_manager.core.utils import ChromeType
 from webdriver_manager.firefox import GeckoDriverManager
-from webdriver_manager.microsoft import IEDriverManager, EdgeChromiumDriverManager
-import platform
-import os
-import logging
-
-
-class BrowserType(Enum):
-    GOOGLE_CHROME = auto()
-    CHROMIUM = auto()
-    BRAVE = auto()
-    MOZILLA_FIREFOX =auto()
-    SAFARI = auto()
-    MICROSOFT_EDGE = auto()
-    INTERNET_EXPLORER = auto()
+from webdriver_manager.microsoft import EdgeChromiumDriverManager, IEDriverManager
 
 
 class WebDriverFactory:
+    def __init__(self, log=None):
+        if log is None:
+            self.log = logging.getLogger(__name__)
+        else:
+            self.log = log
+        self.log.debug(f"Creating instance of WebDriverFactory.")
+        self.operating_system = None
+        os.environ["GH_TOKEN"] = "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"
 
-    def __init__(self):
-        self.log = logging.getLogger(__name__)
-        self.log.debug("Creating instance of WebDriverFactory.")
-        self.driver = None
-        os.environ['GH_TOKEN'] = "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"
+    def get_driver(self, browser_type: str, is_headless=False):
+        """
+        Get WebDriver instance.
+        * browser_type - type of browser from which to run tests. Supported browsers are "GOOGLE_CHROME", "CHROMIUM",
+        "BRAVE", "MOZILLA_FIREFOX", "SAFARI", "MICROSOFT_EDGE" and "INTERNET_EXPLORER"
+        * is_headless - set headless mode. Note that "SAFARI" and "INTERNET_EXPLORER" headless modes are not supported.
+        """
+        self.operating_system = platform.system()
+        if browser_type in ("GOOGLE_CHROME", "CHROMIUM", "BRAVE"):
+            driver = self.__get_chrome_driver(browser_type, is_headless)
+        elif browser_type == "MOZILLA_FIREFOX":
+            driver = self.__get_mozilla_firefox_driver(is_headless)
+        elif browser_type == "SAFARI":
+            driver = self.__get_safari_driver(is_headless)
+        elif browser_type == "MICROSOFT_EDGE":
+            driver = self.__get_microsoft_edge_driver(is_headless)
+        elif browser_type == "INTERNET_EXPLORER":
+            driver = self.__get_internet_explorer_driver(is_headless)
+        else:
+            raise ValueError(f"{browser_type} is an unsupported Web Driver.")
+        driver.maximize_window()
+        return driver
 
-    def __get_driver(self, browser_type: BrowserType):
-        local_task = str(browser_type).replace("_", " ").title()
-        self.log.debug("Initializing " + local_task + " Web Driver")
-        self.driver = None
-        operating_system = platform.system()
-        try:
-            match browser_type:
-                case BrowserType.GOOGLE_CHROME:
-                    self.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
-                case BrowserType.CHROMIUM:
-                    self.driver = webdriver.Chrome(service=Service(ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install()))
-                case BrowserType.BRAVE:
-                    self.driver = webdriver.Chrome(service=Service(ChromeDriverManager(chrome_type=ChromeType.BRAVE).install()))
-                case BrowserType.MOZILLA_FIREFOX:
-                    self. driver = webdriver.Firefox(service=Service(GeckoDriverManager().install()))
-                case BrowserType.SAFARI:
-                    if operating_system == 'Darwin':
-                        self.driver = webdriver.Safari()
-                    else:
-                        self.log.error(operating_system + " is an unsupported Operating System to run SAFARI Web Driver")
-                        exit(1)
-                case BrowserType.MICROSOFT_EDGE:
-                    self.driver = webdriver.Edge(service=Service(EdgeChromiumDriverManager().install()))
-                case BrowserType.INTERNET_EXPLORER:
-                    if operating_system == 'Windows':
-                        self.driver = webdriver.Ie(service=Service(IEDriverManager().install()))
-                    else:
-                        self.log.error(operating_system + " is an unsupported Operating System to run INTERNET EXPLORER Web Driver")
-                        exit(1)
-                case _:
-                    self.log.error(local_task + " is an unsupported Web Driver.")
-        except WebDriverException as error_message:
-            self.log.error("Encountered WebDriverException when trying to get " + local_task + " Web Driver: " + str(error_message))
-        except Exception as error_message:
-            self.log.error("Encountered Exception when trying to get " + local_task + " Web Driver: " + str(error_message))
-            exit(1)
-        return self.driver
+    def __get_chrome_driver(self, browser_type: str, is_headless=False):
+        self.log.info(f"Initializing {browser_type.replace('_', ' ').title()} Web Driver")
+        if browser_type == "GOOGLE_CHROME":
+            chrome_type = ChromeType.GOOGLE
+        elif browser_type == "CHROMIUM":
+            chrome_type = ChromeType.CHROMIUM
+        elif browser_type == "BRAVE":
+            chrome_type = ChromeType.BRAVE
+        else:
+            raise ValueError(f"Unsupported Chrome Browser: {browser_type}")
 
-    def get_chrome_driver(self):
-        chrome_driver = self.__get_driver(BrowserType.CHROME)
-        return chrome_driver
+        if is_headless:
+            options = ChromeOptions()
+            options.headless = True
+        else:
+            options = None
 
-    def get_chromium_driver(self):
-        chromium_driver = self.__get_driver(BrowserType.CHROMIUM)
-        return chromium_driver
+        driver = webdriver.Chrome(
+            service=Service(ChromeDriverManager(chrome_type=chrome_type).install()), options=options
+        )
+        return driver
 
-    def get_brave_driver(self):
-        brave_driver = self.__get_driver(BrowserType.BRAVE)
-        return brave_driver
+    def __get_mozilla_firefox_driver(self, is_headless=False):
+        self.log.info(f"Initializing Mozilla Firefox Web Driver")
+        if is_headless:
+            options = FirefoxOptions()
+            options.headless = True
+        else:
+            options = None
 
-    def get_firefox_driver(self):
-        firefox_driver = self.__get_driver(BrowserType.FIREFOX)
-        return firefox_driver
+        profile = webdriver.FirefoxProfile()
+        profile.set_preference("security.insecure_field_warning.contextual.enabled", False)
 
-    def get_safari_driver(self):
-        safari_driver = self.__get_driver(BrowserType.SAFARI)
-        return safari_driver
+        driver = webdriver.Firefox(
+            service=FirefoxService(GeckoDriverManager().install()),
+            options=options,
+            firefox_profile=profile,
+        )
+        return driver
 
-    def get_edge_driver(self):
-        edge_driver = self.__get_driver(BrowserType.EDGE)
-        return edge_driver
+    def __get_safari_driver(self, is_headless=False):
+        self.log.info(f"Initializing Safari Web Driver")
+        if self.operating_system == "Darwin":
+            if is_headless:
+                raise ValueError("Headless is not supported for Safari Web Driver.")
+            else:
+                driver = webdriver.Safari()
+        else:
+            raise OSError(
+                f"{self.operating_system} is an unsupported Operating System to run Safari Web Driver."
+            )
+        return driver
 
-    def get_ie_driver(self):
-        ie_driver = self.__get_driver(BrowserType.IE)
-        return ie_driver
+    def __get_microsoft_edge_driver(self, is_headless=False):
+        self.log.info(f"Initializing Microsoft Edge Web Driver")
+        options = EdgeOptions()
+        if is_headless:
+            options.headless = True
 
+        driver = webdriver.Edge(
+            service=EdgeService(EdgeChromiumDriverManager().install()),
+            options=options,
+        )
+        return driver
 
-class WaitAction(Enum):
-    URL_TO_MATCH = auto()
-    URL_TO_CONTAIN = auto()
-    TITLE_TO_MATCH = auto()
-    TITLE_TO_CONTAIN = auto()
-    ELEMENT_TO_BE_PRESENT = auto()
-    ELEMENT_TO_BE_VISIBLE = auto()
-    ELEMENT_TO_BE_INVISIBLE = auto()
-    ELEMENT_TO_BE_CLICKABLE = auto()
-    ELEMENTS_TO_BE_PRESENT = auto()
-    ELEMENTS_TO_BE_VISIBLE = auto()
-    TEXT_TO_MATCH = auto()
-    ALERT_TO_BE_PRESENT = auto()
-    ATTRIBUTE_TO_MATCH = auto()
+    def __get_internet_explorer_driver(self, is_headless=False):
+        self.log.info(f"Initializing Internet Explorer Web Driver")
+        if self.operating_system == "Windows":
+            if is_headless:
+                raise ValueError("Headless is not supported for Internet Explorer Web Driver.")
+            else:
+                driver = webdriver.Ie(service=IEService(IEDriverManager().install()))
+        else:
+            raise OSError(
+                f"{self.operating_system} is an unsupported Operating System to run Internet Explorer Web Driver"
+            )
+        return driver
 
 
 class WaitCommands:
-
-    def __init__(self, driver, implicit_wait_duration, explicit_wait_duration: int):
-        self.log = logging.getLogger(__name__)
-        self.log.debug("Creating instance of WaitCommands.")
-        self.element = None
-        self.driver = driver
-        self.implicit_wait_duration = implicit_wait_duration
-        self.explicit_wait_duration = explicit_wait_duration
-        self.driver.implicitly_wait(self.implicit_wait_duration)
-        self.wait = WebDriverWait(self.driver, explicit_wait_duration)
-
-    def set_implicit_wait(self, implicit_wait_duration: int):
-        self.log.debug("Setting Implicit Wait to " + implicit_wait_duration)
-        self.driver.implicitly_wait(implicit_wait_duration)
-
-    def set_explicit_wait(self, explicit_wait_duration: int):
-        self.log.debug("Setting Explicit Wait to " + explicit_wait_duration)
-        self.wait = WebDriverWait(self.driver, explicit_wait_duration)
-
-    def __execute(self, action: WaitAction, check_value: str):
-        local_task = str(action).replace("_", " ").title()
-        self.log.debug("Waiting for " + local_task + " specified value: " + check_value)
-        status = False
+    def __init__(
+        self, driver: webdriver, implicit_wait_duration: int, explicit_wait_duration: int, log=None
+    ):
+        if log is None:
+            self.log = logging.getLogger(__name__)
+        else:
+            self.log = log
+        self.log.debug(f"Creating instance of WaitCommands.")
         try:
-            match action:
-                case WaitAction.URL_TO_MATCH:
-                    status = self.wait.until(expected_conditions.url_to_be(check_value))
-                case WaitAction.URL_TO_CONTAIN:
-                    status = self.wait.until(expected_conditions.url_contains(check_value))
-                case WaitAction.TITLE_TO_MATCH:
-                    status = self.wait.until(expected_conditions.title_is(check_value))
-                case WaitAction.TITLE_TO_CONTAIN:
-                    status = self.wait.until(expected_conditions.title_contains(check_value))
-                case _:
-                    self.log.error(local_task + " is an unsupported Wait Command.")
-        except TimeoutException as error_message:
-            self.log.error("Encountered TimeoutException when trying to wait for " + local_task + " specified value: " + check_value + ": " + str(error_message))
-        except Exception as error_message:
-            self.log.error("Encountered Exception when trying to wait for " + local_task + " specified value: " + check_value + ": " + str(error_message))
+            self.driver = driver
+            self.driver.implicitly_wait(implicit_wait_duration)
+            self.explicit_wait_duration = explicit_wait_duration
+            self.wait = WebDriverWait(self.driver, explicit_wait_duration)
+        except AttributeError:
+            self.log.fatal("WebDriver or Wait is not initialized!")
+            raise
+
+    def wait_for_url_to_be(self, url: str):
+        self.log.debug(f"Waiting for URL to be: {url}")
+        status = self.wait.until(expected_conditions.url_to_be(url))
         return status
 
-    def wait_for_to_be(self, url: str):
-        status = self.__execute(WaitAction.URL_TO_MATCH, url)
-        return status
-
-    def wait_for_url_to_contain(self, url: str):
-        status = self.__execute(WaitAction.URL_TO_CONTAIN, url)
+    def wait_for_url_to_contain(self, value: str):
+        self.log.debug(f"Waiting for URL to contain: {value}")
+        status = self.wait.until(expected_conditions.url_contains(value))
         return status
 
     def wait_for_title_to_be(self, title: str):
-        status = self.__execute(WaitAction.TITLE_TO_MATCH, title)
+        self.log.debug(f"Waiting for Title to be: {title}")
+        status = self.wait.until(expected_conditions.title_is(title))
         return status
 
     def wait_for_title_to_contain(self, title: str):
-        status: bool = self.__execute(WaitAction.TITLE_TO_CONTAIN, title)
+        self.log.debug(f"Waiting for Title to contain: {title}")
+        status = self.wait.until(expected_conditions.title_contains(title))
         return status
 
-    def __execute(self, action: WaitAction, locator: By, value: str):
-        local_task = str(action).replace("_", " ").title()
-        self.log.debug("Waiting for " + value + " " + local_task + ".")
-        element = None
-        try:
-            match str:
-                case WaitAction.ELEMENT_TO_BE_PRESENT:
-                    element = self.wait.until(expected_conditions.presence_of_element_located(locator, value))
-                case WaitAction.ELEMENT_TO_BE_VISIBLE:
-                    element = self.wait.until(expected_conditions.visibility_of_element_located(locator, value))
-                case WaitAction.ELEMENT_TO_BE_INVISIBLE:
-                    self.wait.until(expected_conditions.invisibility_of_element_located(locator, value))
-                case WaitAction.ELEMENT_TO_BE_CLICKABLE:
-                    element = self.wait.until(expected_conditions.element_to_be_clickable(locator, value))
-                case _:
-                    self.log.error(local_task + " is an unsupported Wait Command.")
-        except TimeoutException as error_message:
-            self.log.error("Encountered TimeoutException when trying to wait for " + local_task + ": " + str(error_message))
-        except Exception as error_message:
-            self.log.error("Encountered Exception when trying to wait for " + local_task + ": " + str(error_message))
+    def wait_for_element_to_be_present(self, locator: By):
+        self.log.debug(f"Waiting for element: {str(locator)} to be present.")
+        element = self.wait.until(expected_conditions.presence_of_element_located(locator))
         return element
 
-    def wait_for_element_to_be_present(self, locator: By, value: str):
-        element = self.__execute(WaitAction.ELEMENT_TO_BE_PRESENT, locator, value)
+    def wait_for_element_to_be_visible(self, locator: By):
+        self.log.debug(f"Waiting for element: {str(locator)} to be visible.")
+        element = self.wait.until(expected_conditions.visibility_of_element_located(locator))
         return element
 
-    def wait_for_element_to_be_visible(self, locator: By, value: str):
-        element = self.__execute(WaitAction.ELEMENT_TO_BE_VISIBLE, locator, value)
+    def wait_for_element_to_be_invisible(self, locator: By):
+        self.log.debug(f"Waiting for element: {str(locator)} to be invisible.")
+        status = self.wait.until(expected_conditions.invisibility_of_element_located(locator))
+        return status
+
+    def wait_for_element_to_be_clickable(self, locator: By):
+        self.log.debug(f"Waiting for element:{str(locator)} to be clickable.")
+        element = self.wait.until(expected_conditions.element_to_be_clickable(locator))
         return element
 
-    def wait_for_element_to_be_invisible(self, locator: By, value: str):
-        self.__execute(WaitAction.ELEMENT_TO_BE_INVISIBLE, locator, value)
-
-    def wait_for_element_to_be_clickable(self, locator: By, value: str):
-        element = self.__execute(WaitAction.ELEMENT_TO_BE_CLICKABLE, locator, value)
+    def wait_for_nested_element_to_be_present(self, parent_element: WebElement, child_locator: By):
+        self.log.debug(
+            f"Waiting for nested element: {str(child_locator)} under parent element: {str(parent_element)} to be present."
+        )
+        local_wait = WebDriverWait(parent_element, self.explicit_wait_duration)
+        element = local_wait.until(expected_conditions.presence_of_element_located(child_locator))
         return element
 
-    def __execute(self, action: WaitAction, parent_locator: By, parent_value: str, child_locator: By, child_value: str):
-        local_task = str(action).replace("_", " ").title()
-        self.log.debug("Waiting for " + child_value + " CHILD " + local_task + " under PARENT ELEMENT " + parent_value + ".")
-        child_element = None
-        try:
-            parent_element = self.wait.until(expected_conditions.presence_of_element_located(parent_locator, parent_value))
-            local_wait = WebDriverWait(parent_element, self.explicit_wait_duration)
-            match str:
-                case WaitAction.ELEMENT_TO_BE_PRESENT:
-                    child_element = local_wait.until(expected_conditions.presence_of_element_located(child_locator, child_value))
-                case WaitAction.ELEMENT_TO_BE_VISIBLE:
-                    child_element = local_wait.until(expected_conditions.visibility_of_element_located(child_locator, child_value))
-                case WaitAction.ELEMENT_TO_BE_INVISIBLE:
-                    local_wait.until(expected_conditions.invisibility_of_element_located(child_locator, child_value))
-                case WaitAction.ELEMENT_TO_BE_CLICKABLE:
-                    child_element = local_wait.until(expected_conditions.element_to_be_clickable(child_locator, child_value))
-                case _:
-                    self.log.error(local_task + " is an unsupported Wait Command.")
-        except TimeoutException as error_message:
-            self.log.error("Encountered TimeoutException when trying to wait for " + child_value + " CHILD " + local_task + " under PARENT ELEMENT " + parent_value + ": " + str(error_message))
-        except Exception as error_message:
-            self.log.error("Encountered Exception when trying to wait for " + child_value + " CHILD " + local_task + " under PARENT ELEMENT " + parent_value + ": " + str(error_message))
-        return child_element
-
-    def wait_for_element_to_be_present(self, parent_locator: By, parent_value: str, child_locator: By, child_value: str):
-        element = self.__execute(WaitAction.ELEMENT_TO_BE_PRESENT, parent_locator, parent_value, child_locator, child_value)
+    def wait_for_nested_element_to_be_visible(self, parent_element: WebElement, child_locator: By):
+        self.log.debug(
+            f"Waiting for nested element: {str(child_locator)} under parent element: {str(parent_element)} to be visible."
+        )
+        local_wait = WebDriverWait(parent_element, self.explicit_wait_duration)
+        element = local_wait.until(expected_conditions.visibility_of_element_located(child_locator))
         return element
 
-    def wait_for_element_to_be_visible(self, parent_locator: By, parent_value: str, child_locator: By, child_value: str):
-        element = self.__execute(WaitAction.ELEMENT_TO_BE_VISIBLE, parent_locator, parent_value, child_locator, child_value)
+    def wait_for_nested_element_to_be_invisible(
+        self, parent_element: WebElement, child_locator: By
+    ):
+        self.log.debug(
+            f"Waiting for nested element: {str(child_locator)} under parent element: {str(parent_element)} to be invisible."
+        )
+        local_wait = WebDriverWait(parent_element, self.explicit_wait_duration)
+        status = local_wait.until(
+            expected_conditions.invisibility_of_element_located(child_locator)
+        )
+        return status
+
+    def wait_for_nested_element_to_be_clickable(
+        self, parent_element: WebElement, child_locator: By
+    ):
+        self.log.debug(
+            f"Waiting for nested element: {str(child_locator)} under parent element: {str(parent_element)} to be clickable."
+        )
+        local_wait = WebDriverWait(parent_element, self.explicit_wait_duration)
+        element = local_wait.until(expected_conditions.element_to_be_clickable(child_locator))
         return element
 
-    def wait_for_element_to_be_invisible(self, parent_locator: By, parent_value: str, child_locator: By, child_value: str):
-        self.__execute(WaitAction.ELEMENT_TO_BE_INVISIBLE, parent_locator, parent_value, child_locator, child_value)
-
-    def wait_for_element_to_be_clickable(self, parent_locator: By, parent_value: str, child_locator: By, child_value: str):
-        element = self.__execute(WaitAction.ELEMENT_TO_BE_CLICKABLE, parent_locator, parent_value, child_locator, child_value)
-        return element
-
-    def __execute(self, action: WaitAction, parent_element: WebElement, child_locator: By, child_value: str):
-        local_task = str(action).replace("_", " ").title()
-        self.log.debug("Waiting for " + child_value + " CHILD " + local_task + " under PARENT ELEMENT " + str(parent_element) + ".")
-        child_element = None
-        try:
-            local_wait = WebDriverWait(parent_element, self.explicit_wait_duration)
-            match str:
-                case WaitAction.ELEMENT_TO_BE_PRESENT:
-                    child_element = local_wait.until(expected_conditions.presence_of_element_located(child_locator, child_value))
-                case WaitAction.ELEMENT_TO_BE_VISIBLE:
-                    child_element = local_wait.until(expected_conditions.visibility_of_element_located(child_locator, child_value))
-                case WaitAction.ELEMENT_TO_BE_INVISIBLE:
-                    local_wait.until(expected_conditions.invisibility_of_element_located(child_locator, child_value))
-                case WaitAction.ELEMENT_TO_BE_CLICKABLE:
-                    child_element = local_wait.until(expected_conditions.element_to_be_clickable(child_locator, child_value))
-                case _:
-                    self.log.error(local_task + " is an unsupported Wait Command.")
-        except TimeoutException as error_message:
-            self.log.error("Encountered TimeoutException when trying to wait for " + child_value + " CHILD " + local_task + " under PARENT ELEMENT " + str(parent_element) + ": " + str(error_message))
-        except Exception as error_message:
-            self.log.error("Encountered Exception when trying to wait for " + child_value + " CHILD " + local_task + " under PARENT ELEMENT " + str(parent_element) + ": " + str(error_message))
-        return child_element
-
-    def wait_for_element_to_be_present(self, parent_element: WebElement, child_locator: By, child_value: str):
-        element = self.__execute(WaitAction.ELEMENT_TO_BE_PRESENT, parent_element, child_locator, child_value)
-        return element
-
-    def wait_for_element_to_be_visible(self, parent_element: WebElement, child_locator: By, child_value: str):
-        element = self.__execute(WaitAction.ELEMENT_TO_BE_VISIBLE, parent_element, child_locator, child_value)
-        return element
-
-    def wait_for_element_to_be_invisible(self, parent_element: WebElement, child_locator: By, child_value: str):
-        self.__execute(WaitAction.ELEMENT_TO_BE_INVISIBLE, parent_element, child_locator, child_value)
-
-    def wait_for_element_to_be_clickable(self, parent_element: WebElement, child_locator: By, child_value: str):
-        element = self.__execute(WaitAction.ELEMENT_TO_BE_CLICKABLE, parent_element, child_locator, child_value)
-        return element
-
-    def __execute(self, action: WaitAction, locator: By, value: str):
-        local_task = str(action).replace("_", " ").title()
-        self.log.debug("Waiting for " + value + " " + local_task + ".")
-        try:
-            match str:
-                case WaitAction.ELEMENTS_TO_BE_PRESENT:
-                    elements = self.wait.until(expected_conditions.presence_of_all_elements_located(locator, value))
-                case WaitAction.ELEMENTS_TO_BE_VISIBLE:
-                    elements = self.wait.until(expected_conditions.visibility_of_all_elements_located(locator, value))
-                case _:
-                    self.log.error(local_task + " is an unsupported Wait Command.")
-        except TimeoutException as error_message:
-            self.log.error("Encountered TimeoutException when trying to wait for " + local_task + ": " + str(error_message))
-        except Exception as error_message:
-            self.log.error("Encountered Exception when trying to wait for " + local_task + ": " + str(error_message))
+    def wait_for_elements_to_be_present(self, locator: By):
+        self.log.debug(f"Waiting for elements: {str(locator)} to be present.")
+        elements = self.wait.until(expected_conditions.presence_of_all_elements_located(locator))
         return elements
 
-    def wait_for_elements_to_be_present(self, locator: By, value: str):
-        elements = self.__execute(WaitAction.ELEMENTS_TO_BE_PRESENT, locator, value)
+    def wait_for_elements_to_be_visible(self, locator: By):
+        self.log.debug(f"Waiting for elements: {str(locator)} to be visible.")
+        elements = self.wait.until(expected_conditions.visibility_of_all_elements_located(locator))
         return elements
 
-    def wait_for_elements_to_be_visible(self, locator: By, value: str):
-        elements = self.__execute(WaitAction.ELEMENTS_TO_BE_VISIBLE, locator, value)
+    def wait_for_nested_elements_to_be_present(self, parent_element: WebElement, child_locator: By):
+        self.log.debug(
+            f"Waiting for nested elements: {str(child_locator)} under parent element: {str(parent_element)} to be present."
+        )
+        local_wait = WebDriverWait(parent_element, self.explicit_wait_duration)
+        elements = local_wait.until(expected_conditions.presence_of_element_located(child_locator))
         return elements
 
-    def __execute(self, action: WaitAction, parent_locator: By, parent_value: str, child_locator: By, child_value: str):
-        local_task = str(action).replace("_", " ").title()
-        self.log.debug("Waiting for " + child_value + " CHILD " + local_task + " under PARENT ELEMENT " + parent_value + ".")
-        try:
-            parent_element = self.wait.until(expected_conditions.presence_of_element_located(parent_locator, parent_value))
-            local_wait = WebDriverWait(parent_element, self.explicit_wait_duration)
-            match str:
-                case WaitAction.ELEMENTS_TO_BE_PRESENT:
-                    child_elements = local_wait.until(expected_conditions.presence_of_all_elements_located(child_locator, child_value))
-                case WaitAction.ELEMENTS_TO_BE_VISIBLE:
-                    child_elements = local_wait.until(expected_conditions.visibility_of_all_elements_located(child_locator, child_value))
-                case _:
-                    self.log.error(local_task + " is an unsupported Wait Command.")
-        except TimeoutException as error_message:
-            self.log.error("Encountered TimeoutException when trying to wait for " + child_value + " CHILD " + local_task + " under PARENT ELEMENT " + parent_value + ": " + str(error_message))
-        except Exception as error_message:
-            self.log.error("Encountered Exception when trying to wait for " + child_value + " CHILD " + local_task + " under PARENT ELEMENT " + parent_value + ": " + str(error_message))
-        return child_elements
-
-    def wait_for_elements_to_be_present(self, parent_locator: By, parent_value: str, child_locator: By, child_value: str):
-        elements = self.__execute(WaitAction.ELEMENTS_TO_BE_PRESENT, parent_locator, parent_value, child_locator, child_value)
+    def wait_for_nested_elements_to_be_visible(self, parent_element: WebElement, child_locator: By):
+        self.log.debug(
+            f"Waiting for nested elements: {str(child_locator)} under parent element: {str(parent_element)} to be visible."
+        )
+        local_wait = WebDriverWait(parent_element, self.explicit_wait_duration)
+        elements = local_wait.until(
+            expected_conditions.visibility_of_element_located(child_locator)
+        )
         return elements
 
-    def wait_for_elements_to_be_visible(self, parent_locator: By, parent_value: str, child_locator: By, child_value: str):
-        elements = self.__execute(WaitAction.ELEMENTS_TO_BE_VISIBLE, parent_locator, parent_value, child_locator, child_value)
-        return elements
+    def wait_for_attribute_to_be(self, locator: By, attribute: str, check_value: str):
+        self.log.debug(
+            f"Waiting for value of attribute: {attribute} for element: {str(locator)} to be {str(check_value)}."
+        )
+        status = self.wait.until(
+            expected_conditions.text_to_be_present_in_element_attribute(
+                locator, attribute, check_value
+            )
+        )
+        return status
 
-    def __execute(self, action: WaitAction, parent_element: WebElement, child_locator: By, child_value: str):
-        local_task = str(action).replace("_", " ").title()
-        self.log.debug("Waiting for " + child_value + " CHILD " + local_task + " under PARENT ELEMENT " + str(parent_element) + ".")
-        try:
-            local_wait = WebDriverWait(parent_element, self.explicit_wait_duration)
-            match str:
-                case WaitAction.ELEMENTS_TO_BE_PRESENT:
-                    child_elements = local_wait.until(expected_conditions.presence_of_element_located(child_locator, child_value))
-                case WaitAction.ELEMENTS_TO_BE_VISIBLE:
-                    child_elements = local_wait.until(expected_conditions.visibility_of_element_located(child_locator, child_value))
-                case _:
-                    self.log.error(local_task + " is an unsupported Wait Command.")
-        except TimeoutException as error_message:
-            self.log.error("Encountered TimeoutException when trying to wait for " + child_value + " CHILD " + local_task + " under PARENT ELEMENT " + str(parent_element) + ": " + str(error_message))
-        except Exception as error_message:
-            self.log.error("Encountered Exception when trying to wait for " + child_value + " CHILD " + local_task + " under PARENT ELEMENT " + str(parent_element) + ": " + str(error_message))
-        return child_elements
+    def wait_for_text_to_be(self, locator: By, check_value: str):
+        self.log.debug(
+            f"Waiting for value of text for element: {str(locator)} to be {str(check_value)}."
+        )
+        status = self.wait.until(
+            expected_conditions.text_to_be_present_in_element(locator, check_value)
+        )
+        return status
 
-    def wait_for_elements_to_be_present(self, parent_element: WebElement, child_locator: By, child_value: str):
-        elements = self.__execute(WaitAction.ELEMENT_TO_BE_PRESENT, parent_element, child_locator, child_value)
-        return elements
-
-    def wait_for_elements_to_be_visible(self, parent_element: WebElement, child_locator: By, child_value: str):
-        elements = self.__execute(WaitAction.ELEMENT_TO_BE_VISIBLE, parent_element, child_locator, child_value)
-        return elements
-
-    def __execute(self, action: WaitAction, locator: By, value: str, attribute: str, check_value: str):
-        local_task = str(action).replace("_", " ").title()
-        self.log.debug("Waiting for " + value + " " + local_task + ".")
-        element = None
-        try:
-            match str:
-                case WaitAction.ATTRIBUTE_TO_MATCH:
-                    element = self.wait.until(expected_conditions.text_to_be_present_in_element_attribute((locator, value), attribute, check_value))
-                case WaitAction.TEXT_TO_MATCH:
-                    self.wait.until(expected_conditions.text_to_be_present_in_element((locator, value), check_value))
-                case _:
-                    self.log.error(local_task + " is an unsupported Wait Command.")
-        except TimeoutException as error_message:
-            self.log.error("Encountered TimeoutException when trying to wait for " + local_task + ": " + str(error_message))
-        except Exception as error_message:
-            self.log.error("Encountered Exception when trying to wait for " + local_task + ": " + str(error_message))
-        return element
-
-    def wait_for_attribute_to_be(self, locator: By, value: str, attribute: str, check_value: str):
-        self.__execute(WaitAction.ATTRIBUTE_TO_MATCH, locator, value, attribute, check_value)
-
-    def wait_for_text_to_be(self, locator: By, value: str, check_value: str):
-        self.__execute(WaitAction.TEXT_TO_MATCH, locator, value, None, check_value)
+    def wait_for_selection_state_to_be(self, element: WebElement, expected_selected_state: bool):
+        self.log.debug(f"Waiting for Selection State to be: {expected_selected_state}")
+        status = self.wait.until(
+            expected_conditions.element_selection_state_to_be(element, expected_selected_state)
+        )
+        return status
 
     def wait_for_alert_to_be_present(self):
-        self.log.debug("Waiting for Javascript " + str(WaitAction.ALERT_TO_BE_PRESENT).replace("_", " ").title() + ".")
-        try:
-            alert = self.wait.until(expected_conditions.alert_is_present())
-        except TimeoutException as error_message:
-            self.log.error("Encountered TimeoutException when trying to wait for Javascript " + str(WaitAction.ALERT_TO_BE_PRESENT).replace("_", " ").title() + ": " + str(error_message))
-        except Exception as error_message:
-            self.log.error("Encountered Exception when trying to wait for Javascript " + str(WaitAction.ALERT_TO_BE_PRESENT).replace("_", " ").title() + ": " + str(error_message))
-        return alert
+        self.log.debug(f"Waiting for Javascript Alert To Be Present.")
+        status = self.wait.until(expected_conditions.alert_is_present())
+        return status
 
 
 class WebElementFactory:
+    def __init__(self, driver: webdriver, wait: WaitCommands, log=None):
+        if log is None:
+            self.log = logging.getLogger(__name__)
+        else:
+            self.log = log
+        self.log.debug(f"Creating instance of WebElementFactory.")
+        try:
+            self.driver = driver
+            self.wait = wait
+        except AttributeError:
+            self.log.fatal("WebDriver or Wait is not initialized!")
+            raise
 
-    def __init__(self, driver, wait: WaitCommands):
-        self.log = logging.getLogger(__name__)
-        self.log.debug("Creating instance of WebElementFactory.")
-        self.driver = driver
-        self.wait = wait
-
-    def create_element(self, locator: By, value: str):
-        element = self.wait.wait_for_element_to_be_present(locator, value)
+    def create_element(self, locator: By):
+        """
+        Creates and returns a Web Element.
+        """
+        element = self.wait.wait_for_element_to_be_present(locator)
         return element
 
-    def create_element(self, parent_locator: By, parent_value: str, child_locator: By, child_value: str):
-        child_element = self.wait.wait_for_element_to_be_present(parent_locator, parent_value, child_locator, child_value)
+    def create_nested_element(self, parent_element: WebElement, child_locator: By):
+        """
+        Creates and returns a nested Web Element.
+        """
+        child_element = self.wait.wait_for_nested_element_to_be_present(
+            parent_element, child_locator
+        )
         return child_element
 
-    def create_element(self, parent_element: WebElement, child_locator: By, child_value: str):
-        child_element = self.wait.wait_for_element_to_be_present(parent_element, child_locator, child_value)
-        return child_element
+    def create_elements(self, locator: By):
+        """
+        Creates and returns a List of Web Elements.
+        """
+        elements = self.wait.wait_for_elements_to_be_present(locator)
+        return elements
+
+    def create_nested_elements(self, parent_element: WebElement, child_locator: By):
+        """
+        Creates and returns a nested List of Web Elements.
+        """
+        child_elements = self.wait.wait_for_nested_elements_to_be_present(
+            parent_element, child_locator
+        )
+        return child_elements

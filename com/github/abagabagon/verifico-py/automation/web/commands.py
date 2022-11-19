@@ -1,679 +1,852 @@
-from enum import Enum, auto
+import logging
+
+from redo import retriable
 from selenium import webdriver
-from selenium.common import NoSuchWindowException, StaleElementReferenceException, UnexpectedTagNameException, \
-    ElementNotInteractableException, InvalidElementStateException, ElementClickInterceptedException, \
-    MoveTargetOutOfBoundsException
+from selenium.common import (
+    ElementClickInterceptedException,
+    ElementNotInteractableException,
+    InvalidElementStateException,
+    MoveTargetOutOfBoundsException,
+    NoSuchWindowException,
+    StaleElementReferenceException,
+    UnexpectedTagNameException,
+)
 from selenium.webdriver import ActionChains, Keys
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support.ui import Select
-from selenium_utils import WaitCommands
-from selenium_utils import WebElementFactory
-from time import sleep
-import logging
-import platform
 
-
-class AlertAction(Enum):
-    ACCEPT = auto()
-    CANCEL = auto()
-    TYPE_INTO = auto()
+from ledger_test_utils.web.selenium_utils import WaitCommands, WebElementFactory
 
 
 class AlertCommands:
+    """
+    Alert Commands contains functions pertaining to Javascript Alerts in a Web Page.
+    """
 
-    def __init__(self, driver: webdriver, wait: WaitCommands):
-        self.log = logging.getLogger(__name__)
-        self.driver = driver
-        self.wait = wait
+    def __init__(self, driver: webdriver, wait: WaitCommands, log=None):
+        if log is None:
+            self.log = logging.getLogger(__name__)
+        else:
+            self.log = log
+        self.log.debug(f"Creating instance of AlertCommands.")
+        try:
+            self.driver = driver
+            self.wait = wait
+        except AttributeError:
+            self.log.fatal("WebDriver or Wait is not initialized!")
+            raise
 
     def accept_alert(self):
-        self.log.debug("Performing " + str(AlertAction.ACCEPT).title() + " Javascript Alert.")
+        """
+        Accepts Javascript Alert
+        """
+        self.log.debug(f"Accepting Javascript Alert.")
         alert = self.wait.wait_for_alert_to_be_present()
         alert.accept()
 
     def cancel_alert(self):
-        self.log.debug("Performing " + str(AlertAction.CANCEL).title() + " Javascript Alert.")
+        """
+        Cancels Javascript Alert
+        """
+        self.log.debug(f"Canceling Javascript Alert.")
         alert = self.wait.wait_for_alert_to_be_present()
         alert.dismiss()
 
     def type_alert(self, input_text: str):
-        self.log.debug("Performing " + str(AlertAction.TYPE_INTO).replace("_", " ").title() + " Javascript Alert.")
+        """
+        Simulates typing at Javascript Alert Text Box
+
+        Parameters:
+            input_text (str): input text value to type to the alert text box
+        """
+        self.log.debug(f"Typing {input_text} into Javascript Alert.")
         alert = self.wait.wait_for_alert_to_be_present()
         alert.send_keys(input_text)
 
 
-class BrowserAction(Enum):
-    OPEN_TAB = auto()
-    MAXIMIZE = auto()
-    DELETE_ALL_COOKIES = auto()
-    GO_TO = auto()
-    BACK = auto()
-    FORWARD = auto()
-    REFRESH = auto()
-    CLOSE_TAB = auto()
-    CLOSE_BROWSER = auto()
-
-
-class SwitchAction(Enum):
-    TO_DEFAULT = auto()
-    BY_TITLE = auto()
-    BY_URL = auto()
-
-
 class BrowserCommands:
+    """Browser Commands contains functions relating to actions being done by the user at the Web Browser."""
 
-    def __init__(self, driver: webdriver):
-        self.log = logging.getLogger(__name__)
-        self.log.debug("Creating instance of BrowserCommands.")
-        self.driver = driver
-
-    def __execute_browser_action(self, action: BrowserAction, input_value: str):
-        local_task = str(action).replace("_", " ").title()
-        self.log.debug("Performing " + local_task + " Browser Action.")
+    def __init__(self, driver: webdriver, log=None):
+        if log is None:
+            self.log = logging.getLogger(__name__)
+        else:
+            self.log = log
+        self.log.debug(f"Creating instance of BrowserCommands.")
         try:
-            match action:
-                case BrowserAction.OPEN_TAB:
-                    self.driver.execute_script("window.open('" + input_value + "', '_blank');")
-                case BrowserAction.MAXIMIZE:
-                    self.driver.maximize_window()
-                case BrowserAction.DELETE_ALL_COOKIES:
-                    self.driver.delete_all_cookies()
-                case BrowserAction.GO_TO:
-                    self.driver.get(input_value)
-                case BrowserAction.BACK:
-                    self.driver.back()
-                case BrowserAction.FORWARD:
-                    self.driver.forward()
-                case BrowserAction.REFRESH:
-                    self.driver.refresh()
-                case BrowserAction.CLOSE_TAB:
-                    self.driver.close()
-                case BrowserAction.CLOSE_BROWSER:
-                    self.driver.quit()
-                case _:
-                    self.log.error(local_task + " is an unsupported Browser Action.")
-        except Exception as error_message:
-            self.log.warning("Encountered Exception when trying to perform task " + local_task + " Web Driver: " + str(error_message))
+            self.driver = driver
+        except AttributeError:
+            self.log.fatal("WebDriver is not initialized!")
+            raise
 
-    def open_tab(self, url: str):
-        self.__execute_browser_action(BrowserAction.OPEN_TAB, url)
+    def open_tab(self):
+        """
+        Opens Tab
+        """
+        self.log.debug("Opening new tab.")
+        self.driver.execute_script("window.open('{input_value}', '_blank');")
 
     def maximize(self):
-        self.__execute_browser_action(BrowserAction.MAXIMIZE, None)
+        """Maximizes Browser Window"""
+        self.log.debug("Maximizing Window.")
+        self.driver.maximize_window()
 
     def delete_all_cookies(self):
-        self.__execute_browser_action(BrowserAction.DELETE_ALL_COOKIES, None)
+        """Deletes all cookies"""
+        self.log.debug("Deleting all cookies.")
+        self.driver.delete_all_cookies()
 
     def go_to(self, url: str):
-        self.__execute_browser_action(BrowserAction.GO_TO, url)
+        """
+        Navigates to the Url specified
+
+        Parameters:
+            url (str): Url to navigate to
+        """
+        self.log.debug(f"Going to URL: {url}.")
+        self.driver.get(url)
 
     def back(self):
-        self.__execute_browser_action(BrowserAction.BACK, None)
+        """Navigates one item back from the browser's history"""
+        self.log.debug("Navigating back.")
+        self.driver.back()
 
     def forward(self):
-        self.__execute_browser_action(BrowserAction.FORWARD, None)
+        """Navigates one item forward from the browser's history"""
+        self.log.debug("Navigating forward.")
+        self.driver.forward()
 
     def refresh(self):
-        self.__execute_browser_action(BrowserAction.REFRESH, None)
+        """Refreshes current page"""
+        self.log.debug("Refreshing page.")
+        self.driver.refresh()
 
     def close_tab(self):
-        self.__execute_browser_action(BrowserAction.CLOSE_TAB, None)
+        """Closes Tab of a Web Browser"""
+        self.log.debug("Closing tab.")
+        self.driver.close()
 
     def close_browser(self):
-        self.__execute_browser_action(BrowserAction.CLOSE_BROWSER, None)
+        """Closes Web Browser"""
+        self.log.debug("Closing browser.")
+        self.driver.quit()
 
-    def __execute_switch_action(self, action: SwitchAction, input_value: str):
-        local_task = str(action).replace("_", " ").title()
-        for handle in self.driver.window_handles:
-            try:
-                self.driver.switch_to_window(handle)
-                if action == SwitchAction.TO_DEFAULT:
-                    self.log.debug("Switching tab " + local_task)
-                    break
-                else:
-                    self.log.debug("Switching tab " + local_task + ": " + input_value)
-                match action:
-                    case SwitchAction.BY_TITLE:
-                        page_title: str = self.driver.title
-                        if page_title.__eq__(input_value):
-                            self.log.debug("Successfully switched to Window with Title: " + input_value)
-                            break
-                    case SwitchAction.BY_URL:
-                        page_url: str = self.driver.current_url
-                        if page_url.__eq__(input_value):
-                            self.log.debug("Successfully switched to Window with URL: " + input_value)
-                            break
-                    case _:
-                        self.log.error(local_task + " is an unsupported Switch Action.")
-            except NoSuchWindowException as error_message:
-                self.log.warning("Encountered NoSuchWindowException when trying to perform Switch " + local_task + " Action: " + str(error_message))
-            except Exception as error_message:
-                self.log.warning("Encountered Exception when trying to perform Switch " + local_task + " Action: " + str(error_message))
-
+    @retriable(
+        attempts=3,
+        sleeptime=1,
+        sleepscale=1.5,
+        retry_exceptions=(
+            ValueError,
+            NoSuchWindowException,
+        ),
+    )
     def switch_tab_by_title(self, title: str):
-        self.__execute_switch_action(SwitchAction.BY_TITLE, title)
+        """
+        Switches to a Tab based on Page Title
 
+        Parameters:
+            title (str): Title of Page to Switch into
+        """
+        self.log.debug(f"Switching to Tab/Window with Title: {title}.")
+        for handle in self.driver.window_handles:
+            self.driver.switch_to.window(handle)
+            current_title = self.driver.title
+            if current_title == title:
+                self.log.debug(f'Found Page with Title: "{title}".')
+                break
+        else:
+            raise ValueError(f'Page with Title: "{title}" does not exist.')
+
+    @retriable(
+        attempts=3,
+        sleeptime=1,
+        sleepscale=1.5,
+        retry_exceptions=(
+            ValueError,
+            NoSuchWindowException,
+        ),
+    )
     def switch_tab_by_url(self, url: str):
-        self.__execute_switch_action(SwitchAction.BY_URL, url)
+        """
+        Switches to a Tab based on Page Url
+
+        Parameters:
+            url (str): URL of Page to Switch into
+        """
+        self.log.debug(f"Switching to Tab/Window with Title: {url}.")
+        for handle in self.driver.window_handles:
+            self.driver.switch_to.window(handle)
+            current_url = self.driver.current_url
+            if current_url == url:
+                self.log.debug(f'Found Page with URL: "{url}".')
+                break
+        else:
+            raise ValueError(f'Page with URL: "{url}" does not exist.')
 
     def switch_tab_to_original(self):
-        self.__execute_switch_action(SwitchAction.TO_DEFAULT, None)
+        """Switches back to Original Tab"""
+        self.log.debug("Switching to Original or default Tab/Window.")
+        handles = self.driver.window_handles
+        self.driver.switch_to.window(handles[0])
 
     def scroll(self, pixel_horizontal: int, pixel_vertical: int):
-        self.log.debug("Performing SCROLL Browser Action to coordinates " + str(pixel_horizontal) + ", " + str(pixel_vertical))
-        try:
-            self.driver.execute_script("window.scrollBy(" + str(pixel_horizontal) + ", " + str(pixel_vertical) + ")")
-        except Exception as error_message:
-            self.log.warning("Encountered Exception when trying to perform SCROLL Browser Action: " + str(error_message))
+        """
+        Scrolls Page
 
-    def count(self, locator: By, locator_value: str):
-        self.log.debug("Performing Element Count.")
-        elements = self.driver.find_elements(locator, locator_value);
+        Parameters:
+            pixel_horizontal (int): horizontal pixel setting
+            pixel_vertical (int): vertical pixel setting
+        """
+        self.log.debug(f"Scrolling to coordinates {str(pixel_horizontal)}, {str(pixel_vertical)}")
+        self.driver.execute_script(
+            f"window.scrollBy({str(pixel_horizontal)}, {str(pixel_vertical)})"
+        )
+
+    def count(self, locator: By):
+        """
+        Counts instance of the Web Element of the specified Locator
+
+        Parameters:
+            locator (By): locator of Web Element to count.
+        """
+        self.log.debug(f"Checking Element Count of locator: {str(locator)}.")
+        elements = self.driver.find_elements(locator)
         count = len(elements)
         return count
 
 
-class GetAction(Enum):
-    GET_ATTRIBUTE = auto()
-    GET_TEXT = auto()
-    GET_DROPDOWN = auto()
-
-
 class GetCommands:
+    """Get Commands contains functions pertaining to get value actions done by a user in a Web Page."""
 
-    def __init__(self, driver, wait: WaitCommands):
-        self.log = logging.getLogger(__name__)
-        self.log.debug("Creating instance of GetCommands.")
-        self.driver = driver
-        self.wait = wait
-        self.action_chains = ActionChains(self.driver)
-        self.element_factory = WebElementFactory(self.driver, self.wait)
-        self.retrieved_value = None
-
-    def __execute(self, action: GetAction, element: WebElement, attribute: str):
-        local_task = str(action).replace("_", " ").title()
-        action_performed = False
-        self.retrieved_value = None
+    def __init__(self, driver: webdriver, wait: WaitCommands, log=None):
+        if log is None:
+            self.log = logging.getLogger(__name__)
+        else:
+            self.log = log
+        self.log.debug(f"Creating instance of GetCommands.")
         try:
-            match action:
-                case GetAction.GET_ATTRIBUTE:
-                    self.retrieved_value = element.get_attribute(attribute)
-                case GetAction.GET_DROPDOWN:
-                    select = Select(element)
-                    self.retrieved_value = select.first_selected_option
-                case GetAction.GET_TEXT:
-                    self.retrieved_value = element.text
-                case _:
-                    self.log.error(local_task + " is an unsupported Get Action.")
-            action_performed = True
-        except StaleElementReferenceException as error_message:
-            self.log.warning("Encountered StaleElementReferenceException when trying to perform task " + local_task + " Web Driver: " + str(error_message))
-        except UnexpectedTagNameException as error_message:
-            self.log.warning("Encountered UnexpectedTagNameException when trying to perform task " + local_task + " Web Driver: " + str(error_message))
-        except Exception as error_message:
-            self.log.warning("Encountered Exception when trying to perform task " + local_task + " Web Driver: " + str(error_message))
-        return action_performed
+            self.driver = driver
+            self.wait = wait
+            self.action_chains = ActionChains(self.driver)
+            self.element_factory = WebElementFactory(self.driver, self.wait)
+            self.retrieved_value = None
+        except AttributeError:
+            self.log.fatal("WebDriver or Wait is not initialized!")
+            raise
 
-    def __do_command(self, action: GetAction, locator: By, locator_value: str, attribute: str):
-        local_task = str(action).replace("_", " ").title()
-        self.log.debug("Performing " + local_task + " to the Web Element " + locator_value + ".")
-        for x in range(3):
-            element = self.element_factory.create_element(locator, locator_value)
-            action_performed = self.__execute(action, element, attribute)
-            retry_count = x + 1
-            if not action_performed:
-                if x < 3:
-                    self.log.warning("Retrying Get Action " + local_task + " for Web Element " + locator_value + " " + retry_count + "/3.")
-                    sleep(1)
-                else:
-                    self.log.error("Failed to perform Get Action " + local_task + " for Web Element " + locator_value + ".")
-            else:
-                break
-        return self.retrieved_value
+    @retriable(
+        attempts=3, sleeptime=1, sleepscale=1.5, retry_exceptions=(StaleElementReferenceException,)
+    )
+    def get_text(self, locator: By):
+        """
+        Gets the text of the Web Element of the specified Locator.
 
-    def get_text(self, locator: By, locator_value: str):
-        text = self.__do_command(GetAction.GET_TEXT, locator, locator_value, None)
+        Parameters:
+            locator (By): locator of Web Element to get text from
+        Returns:
+            text (str): Retrieved text value
+        """
+        self.log.debug(f"Retrieving text value from locator: {str(locator)}.")
+        element = self.element_factory.create_element(locator)
+        text = element.text
         return text
 
-    def get_attribute(self, locator: By, locator_value: str, attribute: str):
-        attribute_value = self.__do_command(GetAction.GET_ATTRIBUTE, locator, locator_value, attribute)
+    @retriable(
+        attempts=3, sleeptime=1, sleepscale=1.5, retry_exceptions=(StaleElementReferenceException,)
+    )
+    def get_attribute(self, locator: By, attribute: str):
+        """
+        Gets the attribute value of the Web Element of the specified Locator.
+
+        Parameters:
+            locator (By): locator of Web Element to get attribute value from
+            attribute (str): attribute of the locator to get value from
+        Returns:
+            attribute_value (str): Retrieved attribute value
+        """
+        self.log.debug(f"Retrieving attribute value of {attribute} from locator: {str(locator)}.")
+        element = self.element_factory.create_element(locator)
+        attribute_value = element.get_attribute(attribute)
         return attribute_value
 
-    def get_dropdown_value(self, locator: By, locator_value: str):
-        dropdown_value = self.__do_command(GetAction.GET_DROPDOWN, locator, locator_value, None)
+    @retriable(
+        attempts=3,
+        sleeptime=1,
+        sleepscale=1.5,
+        retry_exceptions=(
+            StaleElementReferenceException,
+            UnexpectedTagNameException,
+        ),
+    )
+    def get_dropdown_value(self, locator: By):
+        """
+        Gets the drop-down list value of the Web Element of the specified Locator.
+
+        Parameters:
+            locator (By): locator of Web Element to get Dropdown Value from.
+        Returns:
+            dropdown_value (str): Retrieved Drop-down List Value
+        """
+        self.log.debug(f"Retrieving dropdown value from locator: {str(locator)}.")
+        element = self.element_factory.create_element(locator)
+        select = Select(element)
+        dropdown_value = select.first_selected_option
         return dropdown_value
 
-    def __do_command(self, action: GetAction, parent_locator: By, parent_locator_value: str, child_locator: By, child_locator_value: str, attribute: str):
-        local_task = str(action).replace("_", " ").title()
-        self.log.debug("Performing " + local_task + " to the Child Web Element " + child_locator_value + " under the Parent Web Element " + parent_locator_value + ".")
-        for x in range(3):
-            element = self.element_factory.create_element(parent_locator, parent_locator_value, child_locator, child_locator_value)
-            action_performed = self.__execute(action, element, attribute)
-            retry_count = x + 1
-            if not action_performed:
-                if x < 3:
-                    self.log.warning("Retrying Get Action " + local_task + " to Child Web Element " + child_locator_value + " under the Parent Web Element " + parent_locator_value + " " + retry_count + "/3.")
-                    sleep(1)
-                else:
-                    self.log.error("Failed to perform Get Action " + local_task + " to Child Web Element " + child_locator_value + " under the Parent Web Element " + parent_locator_value + ".")
-            else:
-                break
-        return self.retrieved_value
+    @retriable(
+        attempts=3, sleeptime=1, sleepscale=1.5, retry_exceptions=(StaleElementReferenceException,)
+    )
+    def get_text_nested(self, parent_element: WebElement, child_locator: By):
+        """
+        Gets the text of the nested Web Element of the specified Locator under a Parent Web Element.
 
-    def get_text(self, parent_locator: By, parent_locator_value: str, child_locator: By, child_locator_value: str):
-        text = self.__do_command(GetAction.GET_TEXT, parent_locator, parent_locator_value, child_locator, child_locator_value, None)
+        Parameters:
+            parent_element (WebElement): Parent Web Element where the Child Locator will be located from
+            child_locator (By): locator of nested Web Element to get text from
+        Returns:
+            text (str): Retrieved text value
+        """
+        self.log.debug(
+            f"Retrieving text value from locator: {str(child_locator)} under parent element: {str(parent_element)}."
+        )
+        element = self.element_factory.create_nested_element(parent_element, child_locator)
+        text = element.text
         return text
 
-    def get_attribute(self, parent_locator: By, parent_locator_value: str, child_locator: By, child_locator_value: str, attribute: str):
-        attribute_value = self.__do_command(GetAction.GET_ATTRIBUTE, parent_locator, parent_locator_value, child_locator, child_locator_value, attribute)
+    @retriable(
+        attempts=3, sleeptime=1, sleepscale=1.5, retry_exceptions=(StaleElementReferenceException,)
+    )
+    def get_attribute_nested(self, parent_element: WebElement, child_locator: By, attribute: str):
+        """
+        Gets the attribute value of the nested Web Element of the specified Locator under a Parent Web Element.
+
+        Parameters:
+            parent_element (WebElement) Parent Web Element where the Child Locator will be located from
+            child_locator (By): locator of nested Web Element to get attribute value from
+            attribute (str): attribute of the locator to get value from
+        Returns:
+            attribute_value (str): Retrieved attribute value
+        """
+        self.log.debug(
+            f"Retrieving attribute value of {attribute} from locator: {str(child_locator)} under parent element: {str(parent_element)}."
+        )
+        element = self.element_factory.create_nested_element(parent_element, child_locator)
+        attribute_value = element.get_attribute(attribute)
         return attribute_value
 
-    def get_dropdown_value(self, parent_locator: By, parent_locator_value: str, child_locator: By, child_locator_value: str):
-        dropdown_value = self.__do_command(GetAction.GET_DROPDOWN, parent_locator, parent_locator_value, child_locator, child_locator_value, None)
+    @retriable(
+        attempts=3,
+        sleeptime=1,
+        sleepscale=1.5,
+        retry_exceptions=(
+            StaleElementReferenceException,
+            UnexpectedTagNameException,
+        ),
+    )
+    def get_dropdown_value_nested(self, parent_element: WebElement, child_locator: By):
+        """
+        Gets the drop-down list value of the nested Web Element of the specified Locator under a Parent Web Element.
+
+        Parameters:
+            parent_element (WebElement): Parent Web Element where the Child Locator will be located from
+            child_locator (By): locator of nested Web Element to get Dropdown Value from
+        Returns:
+            dropdown_value (str): Retrieved Drop-down List Value
+        """
+        self.log.debug(
+            f"Retrieving dropdown value from locator: {str(child_locator)} under parent element: {str(parent_element)}"
+        )
+        element = self.element_factory.create_nested_element(parent_element, child_locator)
+        select = Select(element)
+        dropdown_value = select.first_selected_option
         return dropdown_value
-
-    def __do_command(self, action: GetAction, parent_element, child_locator: By, child_locator_value: str, attribute: str):
-        local_task = str(action).replace("_", " ").title()
-        self.log.debug("Performing " + local_task + " to the Child Web Element " + child_locator_value + " under the Parent Web Element " + str(parent_element) + ".")
-        for x in range(3):
-            element = self.element_factory.create_element(parent_element, child_locator, child_locator_value)
-            action_performed = self.__execute(action, element, attribute)
-            retry_count = x + 1
-            if not action_performed:
-                if x < 3:
-                    self.log.warning("Retrying Get Action " + local_task + " to Child Web Element " + child_locator_value + " under the Parent Web Element " + str(parent_element) + " " + retry_count + "/3.")
-                    sleep(1)
-                else:
-                    self.log.error("Failed to perform Get Action " + local_task + " to Child Web Element " + child_locator_value + " under the Parent Web Element " + str(parent_element) + ".")
-            else:
-                break
-        return self.retrieved_value
-
-    def get_text(self, parent_element: WebElement, child_locator: By, child_locator_value: str):
-        text = self.__do_command(GetAction.GET_TEXT, parent_element, child_locator, child_locator_value, None)
-        return text
-
-    def get_attribute(self, parent_element: WebElement, child_locator: By, child_locator_value: str, attribute: str):
-        attribute_value = self.__do_command(GetAction.GET_ATTRIBUTE, parent_element, child_locator, child_locator_value, attribute)
-        return attribute_value
-
-    def get_dropdown_value(self, parent_element: WebElement, child_locator: By, child_locator_value: str):
-        dropdown_value = self.__do_command(GetAction.GET_DROPDOWN, parent_element, child_locator, child_locator_value, None)
-        return dropdown_value
-
-
-class KeyboardAction(Enum):
-    CLEAR = auto()
-    PRESS = auto()
-    TYPE = auto()
 
 
 class KeyboardCommands:
+    """Keyboard Commands contains functions pertaining to keyboard actions done by a user in a Web Page."""
 
-    def __init__(self, driver, wait: WaitCommands):
-        self.log = logging.getLogger(__name__)
-        self.log.debug("Creating instance of KeyboardCommands.")
-        self.driver = driver
-        self.wait = wait
-        self.action_chains = ActionChains(self.driver)
-        self.element_factory = WebElementFactory(self.driver, self.wait)
-
-    def __execute(self, action: KeyboardAction, element: WebElement, input_text: str, key_button: Keys):
-        local_task = str(action).replace("_", " ").title()
-        action_performed = False
-        operating_system = platform.system()
+    def __init__(self, driver: webdriver, wait: WaitCommands, log=None):
+        if log is None:
+            self.log = logging.getLogger(__name__)
+        else:
+            self.log = log
+        self.log.debug(f"Creating instance of KeyboardCommands.")
         try:
-            match action:
-                case KeyboardAction.CLEAR:
-                    if operating_system.__eq__("Darwin"):
-                        self.action_chains.click(element)\
-                            .pause(200).keyDown(Keys.COMMAND).sendKeys("a").keyUp(Keys.COMMAND)\
-                            .pause(200).sendKeys(Keys.DELETE).perform()
-                    else:
-                        self.action_chains.click(element)\
-                            .pause(200).keyDown(Keys.CONTROL).sendKeys("a").keyUp(Keys.CONTROL)\
-                            .pause(200).sendKeys(Keys.DELETE).perform()
-                case KeyboardAction.PRESS:
-                    element.send_keys(key_button)
-                case KeyboardAction.TYPE:
-                    element.send_keys(input_text)
-                case _:
-                    self.log.error(local_task + " is an unsupported Keyboard Action.")
-            action_performed = True
-        except StaleElementReferenceException as error_message:
-            self.log.warning("Encountered StaleElementReferenceException when trying to perform task " + local_task + " Web Driver: " + str(error_message))
-        except ElementNotInteractableException as error_message:
-            self.log.warning("Encountered ElementNotInteractableException when trying to perform task " + local_task + " Web Driver: " + str(error_message))
-            element.click()
-        except InvalidElementStateException as error_message:
-            self.log.warning("Encountered InvalidElementStateException when trying to perform task " + local_task + " Web Driver: " + str(error_message))
-            element.click()
-        except Exception as error_message:
-            self.log.warning("Encountered Exception when trying to perform task " + local_task + " Web Driver: " + str(error_message))
-        return action_performed
+            self.driver = driver
+            self.wait = wait
+            self.action_chains = ActionChains(self.driver)
+            self.element_factory = WebElementFactory(self.driver, self.wait)
+        except AttributeError:
+            self.log.fatal("WebDriver or Wait is not initialized!")
+            raise
 
-    def __do_command(self, action: KeyboardAction, locator: By, locator_value: str, input_text: str, key_button: Keys):
-        local_task = str(action).replace("_", " ").title()
-        self.log.debug("Performing " + local_task + " to the Web Element " + locator_value + ".")
-        for x in range(3):
-            element = self.element_factory.create_element(locator, locator_value)
-            action_performed = self.__execute(action, element, input_text, key_button)
-            retry_count = x + 1
-            if not action_performed:
-                if x < 3:
-                    self.log.warning("Retrying Keyboard Action " + local_task + " for Web Element " + locator_value + " " + retry_count + "/3.")
-                    sleep(1)
-                else:
-                    self.log.error("Failed to perform Keyboard Action " + local_task + " for Web Element " + locator_value + ".")
-            else:
-                break
+    @retriable(
+        attempts=3,
+        sleeptime=1,
+        sleepscale=1.5,
+        retry_exceptions=(
+            StaleElementReferenceException,
+            ElementNotInteractableException,
+            InvalidElementStateException,
+        ),
+    )
+    def clear(self, locator: By):
+        """
+        Clears value of the Web Element of the specified Locator. Applicable for INPUT and TEXTAREA Web Elements.
 
-    def clear(self, locator: By, locator_value: str):
-        self.__do_command(KeyboardAction.CLEAR, locator, locator_value, None, None)
+        Parameters:
+            locator (By): locator of Web Element to clear value of
+        """
+        element = self.element_factory.create_element(locator)
+        element.clear()
 
-    def type(self, locator: By, locator_value: str, input_text: str):
-        self.__do_command(KeyboardAction.TYPE, locator, locator_value, input_text, None)
+    @retriable(
+        attempts=3,
+        sleeptime=1,
+        sleepscale=1.5,
+        retry_exceptions=(
+            StaleElementReferenceException,
+            ElementNotInteractableException,
+            InvalidElementStateException,
+        ),
+    )
+    def type(self, locator: By, input_text: str):
+        """
+        Types the specified input text to the Web Element of the specified Locator. Applicable for INPUT and TEXTAREA
+        Web Elements.
 
-    def press(self, locator: By, locator_value: str, key_button: Keys):
-        self.__do_command(KeyboardAction.PRESS, locator, locator_value, None, key_button)
+        Parameters:
+            locator (By): locator of Web Element to type value to
+            input_text (str): input text value to type into the Web Element
+        """
+        element = self.element_factory.create_element(locator)
+        element.send_keys(input_text)
 
-    def __do_command(self, action: KeyboardAction, parent_locator: By, parent_locator_value: str, child_locator: By, child_locator_value: str, input_text: str, key_button: Keys):
-        local_task = str(action).replace("_", " ").title()
-        self.log.debug("Performing " + local_task + " to the Child Web Element " + child_locator_value + " under the Parent Web Element " + parent_locator_value + ".")
-        for x in range(3):
-            element = self.element_factory.create_element(parent_locator, parent_locator_value, child_locator, child_locator_value)
-            action_performed = self.__execute(action, element, input_text, key_button)
-            retry_count = x + 1
-            if not action_performed:
-                if x < 3:
-                    self.log.warning("Retrying Keyboard Action " + local_task + " to Child Web Element " + child_locator_value + " under the Parent Web Element " + parent_locator_value + " " + retry_count + "/3.")
-                    sleep(1)
-                else:
-                    self.log.error("Failed to perform Keyboard Action " + local_task + " to Child Web Element " + child_locator_value + " under the Parent Web Element " + parent_locator_value + ".")
-            else:
-                break
+    @retriable(
+        attempts=3,
+        sleeptime=1,
+        sleepscale=1.5,
+        retry_exceptions=(
+            StaleElementReferenceException,
+            ElementNotInteractableException,
+            InvalidElementStateException,
+        ),
+    )
+    def press(self, locator: By, key_button: Keys):
+        """
+        Simulates pressing of characters into the Web Element of the specified Locator.
 
-    def clear(self, parent_locator: By, parent_locator_value: str, child_locator: By, child_locator_value: str):
-        self.__do_command(KeyboardAction.CLEAR, parent_locator, parent_locator_value, child_locator, child_locator_value, None, None)
+        Parameters:
+            locator (By): locator of Web Element to press character keys to
+            key_button (Keys): character keys to press into the Web Element
+        """
+        element = self.element_factory.create_element(locator)
+        element.send_keys(key_button)
 
-    def type(self, parent_locator: By, parent_locator_value: str, child_locator: By, child_locator_value: str, input_text: str):
-        self.__do_command(KeyboardAction.TYPE, parent_locator, parent_locator_value, child_locator, child_locator_value, input_text, None)
+    @retriable(
+        attempts=3,
+        sleeptime=1,
+        sleepscale=1.5,
+        retry_exceptions=(
+            StaleElementReferenceException,
+            ElementNotInteractableException,
+            InvalidElementStateException,
+        ),
+    )
+    def clear_nested(self, parent_element: WebElement, child_locator: By):
+        """
+        Clears value of the nested Web Element of the specified Locator under a Parent Web Element. Applicable for
+        INPUT and TEXTAREA Web Elements.
 
-    def press(self, parent_locator: By, parent_locator_value: str, child_locator: By, child_locator_value: str, key_button: Keys):
-        self.__do_command(KeyboardAction.PRESS, parent_locator, parent_locator_value, child_locator, child_locator_value, None, key_button)
+        Parameters:
+            parent_element (WebElement): Parent Web Element where the Child Locator will be located from
+            child_locator (By): locator of nested Web Element to clear value of
+        """
+        element = self.element_factory.create_nested_element(parent_element, child_locator)
+        element.clear()
 
-    def __do_command(self, action: KeyboardAction, parent_element: WebElement, child_locator: By, child_locator_value: str, input_text: str, key_button: Keys):
-        local_task = str(action).replace("_", " ").title()
-        self.log.debug("Performing " + local_task + " to the Child Web Element " + child_locator_value + " under the Parent Web Element " + str(parent_element) + ".")
-        for x in range(3):
-            element = self.element_factory.create_element(parent_element, child_locator, child_locator_value)
-            action_performed = self.__execute(action, element, input_text, key_button)
-            retry_count = x + 1
-            if not action_performed:
-                if x < 3:
-                    self.log.warning("Retrying Keyboard Action " + local_task + " to Child Web Element " + child_locator_value + " under the Parent Web Element " + str(parent_element) + " " + retry_count + "/3.")
-                    sleep(1)
-                else:
-                    self.log.error("Failed to perform Keyboard Action " + local_task + " to Child Web Element " + child_locator_value + " under the Parent Web Element " + str(parent_element) + ".")
-            else:
-                break
+    @retriable(
+        attempts=3,
+        sleeptime=1,
+        sleepscale=1.5,
+        retry_exceptions=(
+            StaleElementReferenceException,
+            ElementNotInteractableException,
+            InvalidElementStateException,
+        ),
+    )
+    def type_nested(self, parent_element: WebElement, child_locator: By, input_text: str):
+        """
+        Types the specified input text to the nested Web Element of the specified Locator under a Parent Web Element.
+        Applicable for INPUT and TEXTAREA Web Elements.
 
-    def clear(self, parent_element: WebElement, child_locator: By, child_locator_value: str):
-        self.__do_command(KeyboardAction.CLEAR, parent_element, child_locator, child_locator_value, None, None)
+        Parameters:
+            parent_element (WebElement): Parent Web Element where the Child Locator will be located from
+            child_locator (By): locator of nested Web Element to clear value of
+            input_text (str): input text value to type into the nested Web Element
+        """
+        element = self.element_factory.create_nested_element(parent_element, child_locator)
+        element.send_keys(input_text)
 
-    def type(self, parent_element: WebElement, child_locator: By, child_locator_value: str, input_text: str):
-        self.__do_command(KeyboardAction.TYPE, parent_element, child_locator, child_locator_value, input_text, None)
+    @retriable(
+        attempts=3,
+        sleeptime=1,
+        sleepscale=1.5,
+        retry_exceptions=(
+            StaleElementReferenceException,
+            ElementNotInteractableException,
+            InvalidElementStateException,
+        ),
+    )
+    def press_nested(self, parent_element: WebElement, child_locator: By, key_button: Keys):
+        """
+        Simulates pressing of characters into the nested Web Element of the specified Locator under a Parent Web Element.
 
-    def press(self, parent_element: WebElement, child_locator: By, child_locator_value: str, key_button: Keys):
-        self.__do_command(KeyboardAction.PRESS, parent_element, child_locator, child_locator_value, None, key_button)
-
-
-class MouseAction(Enum):
-    CLICK = auto()
-    CLICK_JS = auto()
-    CLICK_AND_HOLD = auto()
-    DOUBLE_CLICK = auto()
-    POINT = auto()
+        Parameters:
+            parent_element (WebElement): Parent Web Element where the Child Locator will be located from
+            child_locator (By): locator of nested Web Element to press key characters to
+            key_button (Keys): character keys to press into the nested Web Element
+        """
+        element = self.element_factory.create_nested_element(parent_element, child_locator)
+        element.send_keys(key_button)
 
 
 class MouseCommands:
+    """Mouse Commands contains functions pertaining to mouse actions done by a user at a Web Page."""
 
-    def __init__(self, driver, wait: WaitCommands):
-        self.log = logging.getLogger(__name__)
-        self.log.debug("Creating instance of MouseCommands.")
-        self.driver = driver
-        self.wait = wait
-        self.action_chains = ActionChains(self.driver)
-        self.element_factory = WebElementFactory(self.driver, self.wait)
-
-    def __execute(self, action: MouseAction, element: WebElement):
-        local_task = str(action).replace("_", " ").title()
-        action_performed = False
+    def __init__(self, driver: webdriver, wait: WaitCommands, log=None):
+        if log is None:
+            self.log = logging.getLogger(__name__)
+        else:
+            self.log = log
+        self.log.debug(f"Creating instance of MouseCommands.")
         try:
-            match action:
-                case MouseAction.CLICK:
-                    element.click()
-                case MouseAction.CLICK_JS:
-                    self.driver.execute_script("arguments[0].click();", element)
-                case MouseAction.CLICK_AND_HOLD:
-                    self.action_chains.click_and_hold(element)
-                case MouseAction.DOUBLE_CLICK:
-                    self.action_chains.double_click(element)
-                case MouseAction.POINT:
-                    self.action_chains.move_to_element(element)
-                case _:
-                    self.log.error(local_task + " is an unsupported Mouse Action.")
-            action_performed = True
-        except StaleElementReferenceException as error_message:
-            self.log.warning("Encountered StaleElementReferenceException when trying to perform task " + local_task + " Web Driver: " + str(error_message))
-        except ElementClickInterceptedException as error_message:
-            self.log.warning("Encountered ElementClickInterceptedException when trying to perform task " + local_task + " Web Driver: " + str(error_message))
-            self.action_chains.move_to_element(element)
-        except MoveTargetOutOfBoundsException as error_message:
-            self.log.warning("Encountered MoveTargetOutOfBoundsException when trying to perform task " + local_task + " Web Driver: " + str(error_message))
-            self.action_chains.move_to_element(element)
-        except Exception as error_message:
-            self.log.warning("Encountered Exception when trying to perform task " + local_task + " Web Driver: " + str(error_message))
-        return action_performed
+            self.driver = driver
+            self.wait = wait
+            self.action_chains = ActionChains(self.driver)
+            self.element_factory = WebElementFactory(self.driver, self.wait)
+        except AttributeError:
+            self.log.fatal("WebDriver or Wait is not initialized!")
+            raise
 
-    def __do_command(self, action: MouseAction, locator: By, locator_value: str):
-        local_task = str(action).replace("_", " ").title()
-        self.log.debug("Performing " + local_task + " to the Web Element " + locator_value + ".")
-        for x in range(3):
-            element = self.element_factory.create_element(locator, locator_value)
-            action_performed = self.__execute(action, element)
-            retry_count = x + 1
-            if not action_performed:
-                if x < 3:
-                    self.log.warning("Retrying Mouse Action " + local_task + " to Web Element " + locator_value + " " + retry_count + "/3.")
-                    sleep(1)
-                else:
-                    self.log.error("Failed to perform Mouse Action " + local_task + " to Web Element " + locator_value + ".")
-            else:
-                break
+    @retriable(
+        attempts=3,
+        sleeptime=1,
+        sleepscale=1.5,
+        retry_exceptions=(
+            StaleElementReferenceException,
+            ElementClickInterceptedException,
+            MoveTargetOutOfBoundsException,
+        ),
+    )
+    def click(self, locator: By):
+        """
+        Clicks the Web Element of the specified Locator.
 
-    def click(self, locator: By, locator_value: str):
-        self.__do_command(MouseAction.CLICK, locator, locator_value)
+        Parameters:
+            locator (By): locator of Web Element to click
+        """
+        element = self.element_factory.create_element(locator)
+        element.click()
 
-    def click_js(self, locator: By, locator_value: str):
-        self.__do_command(MouseAction.CLICK_JS, locator, locator_value)
+    @retriable(
+        attempts=3,
+        sleeptime=1,
+        sleepscale=1.5,
+        retry_exceptions=(StaleElementReferenceException,),
+    )
+    def click_js(self, locator: By):
+        """
+        Clicks the Web Element of the specified Locator using Javascript.
 
-    def click_and_hold(self, locator: By, locator_value: str):
-        self.__do_command(MouseAction.CLICK_AND_HOLD, locator, locator_value)
+        Parameters:
+            locator (By): locator of Web Element to click
+        """
+        element = self.element_factory.create_element(locator)
+        self.driver.execute_script("arguments[0].click();", element)
 
-    def double_click(self, locator: By, locator_value: str):
-        self.__do_command(MouseAction.DOUBLE_CLICK, locator, locator_value)
+    @retriable(
+        attempts=3,
+        sleeptime=1,
+        sleepscale=1.5,
+        retry_exceptions=(
+            StaleElementReferenceException,
+            ElementClickInterceptedException,
+            MoveTargetOutOfBoundsException,
+        ),
+    )
+    def click_and_hold(self, locator: By):
+        """
+        Clicks and holds the Web Element of the specified Locator.
 
-    def point(self, locator: By, locator_value: str):
-        self.__do_command(MouseAction.POINT, locator, locator_value)
+        Parameters:
+            locator (By): locator of Web Element to click and hold
+        """
+        element = self.element_factory.create_element(locator)
+        self.action_chains.click_and_hold(element).perform()
 
-    def __do_command(self, action: MouseAction, parent_locator: By, parent_locator_value: str, child_locator: By, child_locator_value: str):
-        local_task = str(action).replace("_", " ").title()
-        self.log.debug("Performing " + local_task + " to the Child Web Element " + child_locator_value + " under the Parent Web Element " + parent_locator_value + ".")
-        for x in range(3):
-            element = self.element_factory.create_element(parent_locator, parent_locator_value, child_locator, child_locator_value)
-            action_performed = self.__execute(action, element)
-            retry_count = x + 1
-            if not action_performed:
-                if x < 3:
-                    self.log.warning("Retrying Mouse Action " + local_task + " to Child Web Element " + child_locator_value + " under the Parent Web Element " + parent_locator_value + " " + retry_count + "/3.")
-                    sleep(1)
-                else:
-                    self.log.error("Failed to perform Mouse Action " + local_task + " to Child Web Element " + child_locator_value + " under the Parent Web Element " + parent_locator_value + ".")
-            else:
-                break
+    @retriable(
+        attempts=3,
+        sleeptime=1,
+        sleepscale=1.5,
+        retry_exceptions=(
+            StaleElementReferenceException,
+            ElementClickInterceptedException,
+            MoveTargetOutOfBoundsException,
+        ),
+    )
+    def double_click(self, locator: By):
+        """
+        Double-clicks the Web Element of the specified Locator.
 
-    def click(self, parent_locator: By, parent_locator_value: str, child_locator: By, child_locator_value: str):
-        self.__do_command(MouseAction.CLICK, parent_locator, parent_locator_value, child_locator, child_locator_value)
+        Parameters:
+            locator (By): locator of Web Element to double-click
+        """
+        element = self.element_factory.create_element(locator)
+        self.action_chains.double_click(element).perform()
 
-    def click_js(self, parent_locator: By, parent_locator_value: str, child_locator: By, child_locator_value: str):
-        self.__do_command(MouseAction.CLICK_JS, parent_locator, parent_locator_value, child_locator, child_locator_value)
+    @retriable(
+        attempts=3,
+        sleeptime=1,
+        sleepscale=1.5,
+        retry_exceptions=(
+            StaleElementReferenceException,
+            MoveTargetOutOfBoundsException,
+        ),
+    )
+    def point(self, locator: By):
+        """
+        Points mouse to the Web Element of the specified Locator.
 
-    def click_and_hold(self, parent_locator: By, parent_locator_value: str, child_locator: By, child_locator_value: str):
-        self.__do_command(MouseAction.CLICK_AND_HOLD, parent_locator, parent_locator_value, child_locator, child_locator_value)
+        Parameters:
+            locator (By): locator of Web Element to point mouse on
+        """
+        element = self.element_factory.create_element(locator)
+        self.driver.execute_script("arguments[0].scrollIntoView(true);", element)
+        self.action_chains.move_to_element(element).perform()
 
-    def double_click(self, parent_locator: By, parent_locator_value: str, child_locator: By, child_locator_value: str):
-        self.__do_command(MouseAction.DOUBLE_CLICK, parent_locator, parent_locator_value, child_locator, child_locator_value)
+    @retriable(
+        attempts=3,
+        sleeptime=1,
+        sleepscale=1.5,
+        retry_exceptions=(
+            StaleElementReferenceException,
+            ElementClickInterceptedException,
+            MoveTargetOutOfBoundsException,
+        ),
+    )
+    def click_nested(self, parent_element: WebElement, child_locator: By):
+        """
+        Clicks the nested Web Element of the specified Locator under a Parent Web Element.
 
-    def point(self, parent_locator: By, parent_locator_value: str, child_locator: By, child_locator_value: str):
-        self.__do_command(MouseAction.POINT, parent_locator, parent_locator_value, child_locator, child_locator_value)
+        Parameters:
+            parent_element (WebElement): Parent Web Element where the Child Locator will be located from
+            child_locator (By): locator of nested Web Element to click
+        """
+        element = self.element_factory.create_nested_element(parent_element, child_locator)
+        element.click()
 
-    def __do_command(self, action: MouseAction, parent_element: WebElement, child_locator: By, child_locator_value: str):
-        local_task = str(action).replace("_", " ").title()
-        self.log.debug("Performing " + local_task + " to the Child Web Element " + child_locator_value + " under the Parent Web Element " + str(parent_element) + ".")
-        for x in range(3):
-            element = self.element_factory.create_element(parent_element, child_locator, child_locator_value)
-            action_performed = self.__execute(action, element)
-            retry_count = x + 1
-            if not action_performed:
-                if x < 3:
-                    self.log.warning("Retrying Mouse Action " + local_task + " to Child Web Element " + child_locator_value + " under the Parent Web Element " + str(parent_element) + " " + retry_count + "/3.")
-                    sleep(1)
-                else:
-                    self.log.error("Failed to perform Mouse Action " + local_task + " to Child Web Element " + child_locator_value + " under the Parent Web Element " + str(parent_element) + ".")
-            else:
-                break
+    @retriable(
+        attempts=3,
+        sleeptime=1,
+        sleepscale=1.5,
+        retry_exceptions=(StaleElementReferenceException,),
+    )
+    def click_js_nested(self, parent_element: WebElement, child_locator: By):
+        """
+        Clicks the nested Web Element of the specified Locator using Javascript under a Parent Web Element.
 
-    def click(self, parent_element: WebElement, child_locator: By, child_locator_value: str):
-        self.__do_command(MouseAction.CLICK, parent_element, child_locator, child_locator_value)
+        Parameters:
+            parent_element (WebElement): Parent Web Element where the Child Locator will be located from
+            child_locator (By): locator of nested Web Element to click
+        """
+        element = self.element_factory.create_nested_element(parent_element, child_locator)
+        self.driver.execute_script("arguments[0].click();", element)
 
-    def click_js(self, parent_element: WebElement, child_locator: By, child_locator_value: str):
-        self.__do_command(MouseAction.CLICK_JS, parent_element, child_locator, child_locator_value)
+    @retriable(
+        attempts=3,
+        sleeptime=1,
+        sleepscale=1.5,
+        retry_exceptions=(
+            StaleElementReferenceException,
+            ElementClickInterceptedException,
+            MoveTargetOutOfBoundsException,
+        ),
+    )
+    def click_and_hold_nested(self, parent_element: WebElement, child_locator: By):
+        """
+        Clicks and holds the nested Web Element of the specified Locator under a Parent Web Element.
 
-    def click_and_hold(self, parent_element: WebElement, child_locator: By, child_locator_value: str):
-        self.__do_command(MouseAction.CLICK_AND_HOLD, parent_element, child_locator, child_locator_value)
+        Parameters:
+            parent_element (WebElement): Parent Web Element where the Child Locator will be located from
+            child_locator (By): locator of nested Web Element to click and hold
+        """
+        element = self.element_factory.create_nested_element(parent_element, child_locator)
+        self.action_chains.click_and_hold(element).perform()
 
-    def double_click(self, parent_element: WebElement, child_locator: By, child_locator_value: str):
-        self.__do_command(MouseAction.DOUBLE_CLICK, parent_element, child_locator, child_locator_value)
+    @retriable(
+        attempts=3,
+        sleeptime=1,
+        sleepscale=1.5,
+        retry_exceptions=(
+            StaleElementReferenceException,
+            ElementClickInterceptedException,
+            MoveTargetOutOfBoundsException,
+        ),
+    )
+    def double_click_nested(self, parent_element: WebElement, child_locator: By):
+        """
+        Double-clicks the nested Web Element of the specified Locator under a Parent Web Element.
 
-    def point(self, parent_element: WebElement, child_locator: By, child_locator_value: str):
-        self.__do_command(MouseAction.POINT, parent_element, child_locator, child_locator_value)
+        Parameters:
+            parent_element (WebElement): Parent Web Element where the Child Locator will be located from
+            child_locator (By): locator of nested Web Element to double-click
+        """
+        element = self.element_factory.create_nested_element(parent_element, child_locator)
+        self.action_chains.double_click(element).perform()
 
+    @retriable(
+        attempts=3,
+        sleeptime=1,
+        sleepscale=1.5,
+        retry_exceptions=(
+            StaleElementReferenceException,
+            MoveTargetOutOfBoundsException,
+        ),
+    )
+    def point_nested(self, parent_element: WebElement, child_locator: By):
+        """
+        Points mouse to the nested Web Element of the specified Locator under a Parent Web Element.
 
-class SelectAction(Enum):
-    SELECT = auto()
-    DESELECT = auto()
+        Parameters:
+            parent_element (WebElement): Parent Web Element where the Child Locator will be located from
+            child_locator (By): locator of nested Web Element to point mouse on
+        """
+        element = self.element_factory.create_nested_element(parent_element, child_locator)
+        self.driver.execute_script("arguments[0].scrollIntoView(true);", element)
+        self.action_chains.move_to_element(element).perform()
 
 
 class SelectCommands:
+    """Select Commands contains functions pertaining to actions done by a user on drop-down elements in a Web Page."""
 
-    def __init__(self, driver, wait: WaitCommands):
-        self.log = logging.getLogger(__name__)
-        self.log.debug("Creating instance of SelectCommands.")
-        self.driver = driver
-        self.wait = wait
-        self.element_factory = WebElementFactory(self.driver, self.wait)
-
-    def __execute(self, action: SelectAction, element: WebElement, input_option: str):
-        action_performed = False
-        log_task = str(action).replace("_", " ").title()
+    def __init__(self, driver: webdriver, wait: WaitCommands, log=None):
+        if log is None:
+            self.log = logging.getLogger(__name__)
+        else:
+            self.log = log
+        self.log.debug(f"Creating instance of SelectCommands.")
         try:
-            select = Select(element)
-            option_ticked = False
-            for option in select.options:
-                if input_option.__eq__(option):
-                    match action:
-                        case SelectAction.SELECT:
-                            select.select_by_visible_text(input_option)
-                        case SelectAction.DESELECT:
-                            select.deselect_by_visible_text(input_option)
-                        case _:
-                            self.log.error(log_task + " is an unsupported Select Action.")
-                    break
-            if option_ticked:
-                self.log.error("Failed to select an option. Option " + option + " is invalid!")
-            action_performed = True
-        except StaleElementReferenceException as error_message:
-            self.log.warning("Encountered StaleElementReferenceException when trying to perform task " + log_task + " Web Driver: " + str(error_message))
-        except UnexpectedTagNameException as error_message:
-            self.log.warning("Encountered UnexpectedTagNameException when trying to perform task " + log_task + " Web Driver: " + str(error_message))
-        except Exception as error_message:
-            self.log.warning("Encountered Exception when trying to perform task " + log_task + " Web Driver: " + str(error_message))
-        return action_performed
+            self.driver = driver
+            self.wait = wait
+            self.element_factory = WebElementFactory(self.driver, self.wait)
+        except AttributeError:
+            self.log.fatal("WebDriver or Wait is not initialized!")
+            raise
 
-    def __do_command(self, action: SelectAction, locator: By, locator_value: str, input_option: str):
-        log_task = str(action).replace("_", " ").title()
-        self.log.debug(log_task + "ing the option: " + input_option + " from the Web Element " + locator_value + ".")
-        for x in range(3):
-            element = self.element_factory.create_element(locator, locator_value)
-            action_performed = self.__execute(action, element)
-            retry_count = x + 1
-            if not action_performed:
-                if x < 3:
-                    self.log.warning("Retrying Select Action " + log_task + " to Web Element " + locator_value + " " + retry_count + "/3.")
-                    sleep(1)
-                else:
-                    self.log.error("Failed to perform Select Action " + log_task + " to Web Element " + locator_value + ".")
-            else:
+    @retriable(
+        attempts=3,
+        sleeptime=1,
+        sleepscale=1.5,
+        retry_exceptions=(
+            StaleElementReferenceException,
+            UnexpectedTagNameException,
+        ),
+    )
+    def select(self, locator: By, input_option: str):
+        """
+        Selects a Drop-down List / Multi-select Web Element Option of the specified Locator.
+
+        Parameters:
+            locator (By):locator of the Drop-down List / Multi-select Web Element
+            input_option (str): input option to select at the Drop-down List Web Element
+        """
+        element = self.element_factory.create_element(locator)
+        select = Select(element)
+        for option in select.options:
+            if input_option == option.text:
+                select.select_by_visible_text(input_option)
                 break
+        else:
+            raise ValueError(f'Failed to select an option. Option "{input_option}" is invalid!')
 
-    def select(self, locator: By, locator_value: str, input_option: str):
-        self.__do_command(SelectAction.SELECT, locator, locator_value, input_option)
+    @retriable(
+        attempts=3,
+        sleeptime=1,
+        sleepscale=1.5,
+        retry_exceptions=(
+            StaleElementReferenceException,
+            UnexpectedTagNameException,
+        ),
+    )
+    def deselect(self, locator: By, input_option: str):
+        """
+        Deselects a Multi-select Web Element Option of the specified Locator.
 
-    def deselect(self, locator: By, locator_value: str, input_option: str):
-        self.__do_command(SelectAction.DESELECT, locator, locator_value, input_option)
-
-    def __do_command(self, action: SelectAction, parent_locator: By, parent_locator_value: str, child_locator: By, child_locator_value: str, input_option: str):
-        log_task = str(action).replace("_", " ").title()
-        self.log.debug(log_task + "ing the option: " + input_option + " from the Child Web Element " + child_locator_value + " under the Parent Web Element " + parent_locator_value + ".")
-        for x in range(3):
-            element = self.element_factory.create_element(parent_locator, parent_locator_value, child_locator, child_locator_value)
-            action_performed = self.__execute(action, element)
-            retry_count = x + 1
-            if not action_performed:
-                if x < 3:
-                    self.log.warning("Retrying Select Action " + log_task + " to Child Web Element " + child_locator_value + " under the Parent Web Element " + parent_locator_value + " " + retry_count + "/3.")
-                    sleep(1)
-                else:
-                    self.log.error("Failed to perform Select Action " + log_task + " to Child Web Element " + child_locator_value + " under the Parent Web Element " + parent_locator_value + ".")
-            else:
+        Parameters:
+            locator (By):locator of the Multi-select Web Element
+            input_option (str): input option to select at the Multi-select Web Element
+        """
+        element = self.element_factory.create_element(locator)
+        select = Select(element)
+        for option in select.options:
+            if input_option == option.text:
+                select.deselect_by_visible_text(input_option)
                 break
+        else:
+            raise ValueError(f'Failed to deselect an option. Option "{input_option}" is invalid!')
 
-    def select(self, parent_locator: By, parent_locator_value: str, child_locator: By, child_locator_value: str, input_option: str):
-        self.__do_command(SelectAction.SELECT, parent_locator, parent_locator_value, child_locator, child_locator_value, input_option)
+    @retriable(
+        attempts=3,
+        sleeptime=1,
+        sleepscale=1.5,
+        retry_exceptions=(
+            StaleElementReferenceException,
+            UnexpectedTagNameException,
+        ),
+    )
+    def select_nested(self, parent_element: WebElement, child_locator: By, input_option: str):
+        """
+        Selects a Drop-down List / Multi-select nested Web Element Option of the specified Locator under a Parent Web Element.
 
-    def deselect(self, parent_locator: By, parent_locator_value: str, child_locator: By, child_locator_value: str, input_option: str):
-        self.__do_command(SelectAction.DESELECT, parent_locator, parent_locator_value, child_locator, child_locator_value, input_option)
-
-    def __do_command(self, action: SelectAction, parent_element: WebElement, child_locator: By, child_locator_value: str, input_option: str):
-        log_task = str(action).replace("_", " ").title()
-        self.log.debug(log_task + "ing the option: " + input_option + " from the Child Web Element " + child_locator_value + " under the Parent Web Element " + str(parent_element) + ".")
-        for x in range(3):
-            element = self.element_factory.create_element(parent_element, child_locator, child_locator_value)
-            action_performed = self.__execute(action, element)
-            retry_count = x + 1
-            if not action_performed:
-                if x < 3:
-                    self.log.warning("Retrying Select Action " + log_task + " to Child Web Element " + child_locator_value + " under the Parent Web Element " + str(parent_element) + " " + retry_count + "/3.")
-                    sleep(1)
-                else:
-                    self.log.error("Failed to perform Select Action " + log_task + " to Child Web Element " + child_locator_value + " under the Parent Web Element " + str(parent_element) + ".")
-            else:
+        Parameters:
+            parent_element (WebElement): Parent Web Element where the Child Locator will be located from
+            child_locator (By): locator of the Drop-down List / Multi-select nested Web Element
+            input_option (str): input option to select at the Drop-down List Web Element
+        """
+        element = self.element_factory.create_nested_element(parent_element, child_locator)
+        select = Select(element)
+        for option in select.options:
+            if input_option == option.text:
+                select.select_by_visible_text(input_option)
                 break
+        else:
+            raise ValueError(f'Failed to select an option. Option "{input_option}" is invalid!')
 
-    def select(self, parent_element: WebElement, child_locator: By, child_locator_value: str, input_option: str):
-        self.__do_command(SelectAction.SELECT, parent_element, child_locator, child_locator_value, input_option)
+    @retriable(
+        attempts=3,
+        sleeptime=1,
+        sleepscale=1.5,
+        retry_exceptions=(
+            StaleElementReferenceException,
+            UnexpectedTagNameException,
+        ),
+    )
+    def deselect_nested(self, parent_element: WebElement, child_locator: By, input_option: str):
+        """
+        Deselects a Multi-select Web Element Option of the specified Locator.
 
-    def deselect(self, parent_element: WebElement, child_locator: By, child_locator_value: str, input_option: str):
-        self.__do_command(SelectAction.DESELECT, parent_element, child_locator, child_locator_value, input_option)
+        Parameters:
+            parent_element (WebElement): Parent Web Element where the Child Locator will be located from
+            child_locator (By): locator of the Multi-select Web Element
+            input_option (str): input option to select at the Multi-select Web Element
+        """
+        element = self.element_factory.create_nested_element(parent_element, child_locator)
+        select = Select(element)
+        for option in select.options:
+            if input_option == option.text:
+                select.deselect_by_visible_text(input_option)
+                break
+        else:
+            raise ValueError(f'Failed to deselect an option. Option "{input_option}" is invalid!')
